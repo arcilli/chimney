@@ -35,13 +35,32 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
     }
   }
 
+  def deriveWithTarget[From: WeakTypeTag, To: WeakTypeTag, ResultTpe](
+      derivationTarget: DerivationTarget
+  ): c.Expr[ResultTpe] = {
+    val tcTree = findLocalTransformerConfigurationFlags
+    val flags = captureFromTransformerConfigurationTree(tcTree)
+    val config = TransformerConfig(flags = flags)
+      .withDefinitionScope(weakTypeOf[From], weakTypeOf[To])
+      .withDerivationTarget(derivationTarget)
+    val transformerTree = genTransformer[From, To](config)
+    c.Expr[ResultTpe] {
+      q"""
+        {
+          val _ = $tcTree // hack to avoid unused warnings
+          $transformerTree
+        }
+      """
+    }
+  }
+
   def expandTransform[
       From: WeakTypeTag,
       To: WeakTypeTag,
       C: WeakTypeTag,
       InstanceFlags: WeakTypeTag,
       ScopeFlags: WeakTypeTag
-  ](derivationTarget: DerivationTarget): Tree = {
+  ](derivationTarget: DerivationTarget)(callTransform: (Tree, Tree) => Tree): Tree = {
     val tiName = freshTermName("ti")
 
     val config = readConfig[C, InstanceFlags, ScopeFlags]
@@ -52,7 +71,7 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
 
     q"""
        val $tiName = ${c.prefix.tree}
-       ${derivedTransformerTree.callTransform(q"$tiName.source")}
+       ${callTransform(derivedTransformerTree, q"$tiName.source")}
     """
   }
 
@@ -69,19 +88,26 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
 
       case Right(transformerTree) =>
         config.derivationTarget match {
-          case DerivationTarget.LiftedTransformer(f, _, _) =>
-            q"""
-               new _root_.io.scalaland.chimney.TransformerF[$f, $From, $To] {
-                 def transform($srcName: $From): ${f.applyTypeArg(To)} = {
-                   $transformerTree
-                 }
-               }
-            """
-
           case DerivationTarget.TotalTransformer =>
             q"""
                new _root_.io.scalaland.chimney.Transformer[$From, $To] {
                  def transform($srcName: $From): $To = {
+                   $transformerTree
+                 }
+               }
+            """
+          case pt: DerivationTarget.PartialTransformer =>
+            q"""
+               new _root_.io.scalaland.chimney.PartialTransformer[$From, $To] {
+                 def transform($srcName: $From, ${pt.failFastTermName}: Boolean): $To = {
+                   $transformerTree
+                 }
+               }
+            """
+          case DerivationTarget.LiftedTransformer(f, _, _) =>
+            q"""
+               new _root_.io.scalaland.chimney.TransformerF[$f, $From, $To] {
+                 def transform($srcName: $From): ${f.applyTypeArg(To)} = {
                    $transformerTree
                  }
                }
