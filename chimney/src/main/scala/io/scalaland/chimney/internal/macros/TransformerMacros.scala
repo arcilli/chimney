@@ -564,26 +564,28 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
       To: Type,
       config: TransformerConfig
   ): Option[Tree] = {
-    config.derivationTarget match {
-      case DerivationTarget.LiftedTransformer(_, _, _) if config.coproductInstancesF.contains((From.typeSymbol, To)) =>
+    val pureRuntimeDataIdxOpt = config.coproductInstanceOverrides.get((From.typeSymbol, To))
+    val liftedRuntimeDataIdxOpt = config.coproductInstanceFOverrides.get((From.typeSymbol, To))
+
+    (config.derivationTarget, pureRuntimeDataIdxOpt, liftedRuntimeDataIdxOpt) match {
+      case (liftedTarget: DerivationTarget.LiftedTransformer, _, Some(runtimeDataIdxLifted)) =>
         Some(
           mkCoproductInstance(
             config.transformerDefinitionPrefix,
             srcPrefixTree,
-            From.typeSymbol,
             To,
-            config.derivationTarget
+            runtimeDataIdxLifted,
+            liftedTarget
           )
         )
-
-      case _ if config.coproductInstances.contains((From.typeSymbol, To)) =>
+      case (_, Some(runtimeDataIdxPure), _) =>
         Some(
           mkTransformerBodyTree0(config.derivationTarget) {
             mkCoproductInstance(
               config.transformerDefinitionPrefix,
               srcPrefixTree,
-              From.typeSymbol,
               To,
+              runtimeDataIdxPure,
               DerivationTarget.TotalTransformer
             )
           }

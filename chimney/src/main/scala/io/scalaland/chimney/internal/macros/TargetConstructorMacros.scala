@@ -1,8 +1,10 @@
 package io.scalaland.chimney.internal.macros
 
+import io.scalaland.chimney.internal.utils.DslMacroUtils
+
 import scala.reflect.macros.blackbox
 
-trait TargetConstructorMacros extends Model {
+trait TargetConstructorMacros extends Model with DslMacroUtils {
 
   val c: blackbox.Context
 
@@ -29,16 +31,13 @@ trait TargetConstructorMacros extends Model {
   def mkCoproductInstance(
       transformerDefinitionPrefix: Tree,
       srcPrefixTree: Tree,
-      instSymbol: Symbol,
       To: Type,
+      runtimeDataIndex: Int,
       derivationTarget: DerivationTarget
   ): Tree = {
-    val instFullName = instSymbol.fullName
-    val fullTargetName = To.typeSymbol.fullName
     val finalTpe = derivationTarget.targetType(To)
     q"""
-      $transformerDefinitionPrefix
-        .instances(($instFullName, $fullTargetName))
+      ${transformerDefinitionPrefix.accessRuntimeData(runtimeDataIndex)}
         .asInstanceOf[Any => $finalTpe]
         .apply($srcPrefixTree)
         .asInstanceOf[$finalTpe]
