@@ -1,7 +1,7 @@
 package io.scalaland.chimney
 
 import io.scalaland.chimney.internal.{TransformerCfg, TransformerFlags}
-import io.scalaland.chimney.dsl.{TransformerDefinition, TransformerFDefinition}
+import io.scalaland.chimney.dsl.{TransformerDefinition, TransformerDefinitionCommons, TransformerFDefinition}
 import io.scalaland.chimney.internal.macros.dsl.TransformerBlackboxMacros
 
 import scala.language.experimental.macros
@@ -39,7 +39,7 @@ object Transformer {
     * @return [[io.scalaland.chimney.dsl.TransformerDefinition]] with defaults
     */
   def define[From, To]: TransformerDefinition[From, To, TransformerCfg.Empty, TransformerFlags.Default] =
-    new TransformerDefinition(Map.empty, Map.empty)
+    new TransformerDefinition(TransformerDefinitionCommons.emptyRuntimeDataStore)
 
   /** Creates an empty [[io.scalaland.chimney.dsl.TransformerFDefinition]] that
     * you can customize to derive [[io.scalaland.chimney.TransformerF]].

@@ -14,8 +14,7 @@ import scala.language.experimental.macros
   * @tparam C    type-level encoded config
   */
 final class TransformerFDefinition[F[+_], From, To, C <: TransformerCfg, Flags <: TransformerFlags](
-    val overrides: Map[String, Any],
-    val instances: Map[(String, String), Any]
+    val runtimeData: TransformerDefinitionCommons.RuntimeDataStore
 ) extends FlagsDsl[Lambda[`F1 <: TransformerFlags` => TransformerFDefinition[F, From, To, C, F1]], Flags]
     with TransformerDefinitionCommons[Lambda[`C1 <: TransformerCfg` => TransformerFDefinition[F, From, To, C1, Flags]]] {
 
@@ -141,6 +140,7 @@ final class TransformerFDefinition[F[+_], From, To, C <: TransformerCfg, Flags <
   ): TransformerF[F, From, To] =
     macro TransformerBlackboxMacros.buildTransformerFImpl[F, From, To, C, Flags, ScopeFlags]
 
-  override protected def updated(newOverrides: Map[String, Any], newInstances: Map[(String, String), Any]): this.type =
-    new TransformerFDefinition(newOverrides, newInstances).asInstanceOf[this.type]
+  override protected def __updateRuntimeData(newRuntimeData: TransformerDefinitionCommons.RuntimeDataStore): this.type =
+    new TransformerFDefinition(newRuntimeData).asInstanceOf[this.type]
+
 }

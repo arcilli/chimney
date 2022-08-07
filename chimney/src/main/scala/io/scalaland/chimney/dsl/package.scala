@@ -19,7 +19,7 @@ package object dsl {
       * @return [[io.scalaland.chimney.dsl.TransformerInto]]
       */
     final def into[To]: TransformerInto[From, To, TransformerCfg.Empty, TransformerFlags.Default] =
-      new TransformerInto(source, new TransformerDefinition(Map.empty, Map.empty))
+      new TransformerInto(source, new TransformerDefinition(TransformerDefinitionCommons.emptyRuntimeDataStore))
 
     /** Performs in-place transformation of captured source value to target type.
       *
@@ -45,7 +45,7 @@ package object dsl {
       */
     final def intoF[F[+_], To]
         : TransformerFInto[F, From, To, TransformerCfg.WrapperType[F, TransformerCfg.Empty], TransformerFlags.Default] =
-      new TransformerFInto(source, new TransformerFDefinition(Map.empty, Map.empty))
+      new TransformerFInto(source, new TransformerFDefinition(TransformerDefinitionCommons.emptyRuntimeDataStore))
 
     /** Performs in-place wrapped transformation of captured source value to target type.
       *

@@ -14,8 +14,7 @@ import scala.language.experimental.macros
   * @tparam C    type-level encoded config
   */
 final class TransformerDefinition[From, To, C <: TransformerCfg, Flags <: TransformerFlags](
-    val overrides: Map[String, Any],
-    val instances: Map[(String, String), Any]
+    val runtimeData: TransformerDefinitionCommons.RuntimeDataStore
 ) extends FlagsDsl[Lambda[`F1 <: TransformerFlags` => TransformerDefinition[From, To, C, F1]], Flags]
     with TransformerDefinitionCommons[Lambda[`C1 <: TransformerCfg` => TransformerDefinition[From, To, C1, Flags]]] {
 
@@ -28,7 +27,7 @@ final class TransformerDefinition[From, To, C <: TransformerCfg, Flags <: Transf
     * @return [[io.scalaland.chimney.dsl.TransformerFDefinition]]
     */
   def lift[F[+_]]: TransformerFDefinition[F, From, To, WrapperType[F, C], Flags] =
-    new TransformerFDefinition[F, From, To, WrapperType[F, C], Flags](overrides, instances)
+    new TransformerFDefinition[F, From, To, WrapperType[F, C], Flags](runtimeData)
 
   /** Use `value` provided here for field picked using `selector`.
     *
@@ -146,6 +145,7 @@ final class TransformerDefinition[From, To, C <: TransformerCfg, Flags <: Transf
   ): Transformer[From, To] =
     macro TransformerBlackboxMacros.buildTransformerImpl[From, To, C, Flags, ScopeFlags]
 
-  override protected def updated(newOverrides: Map[String, Any], newInstances: Map[(String, String), Any]): this.type =
-    new TransformerDefinition(newOverrides, newInstances).asInstanceOf[this.type]
+  override protected def __updateRuntimeData(newRuntimeData: TransformerDefinitionCommons.RuntimeDataStore): this.type =
+    new TransformerDefinition(newRuntimeData).asInstanceOf[this.type]
+
 }
