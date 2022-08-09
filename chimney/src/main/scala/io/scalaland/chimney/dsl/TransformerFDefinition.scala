@@ -20,7 +20,7 @@ final class TransformerFDefinition[F[+_], From, To, C <: TransformerCfg, Flags <
 ) extends FlagsDsl[Lambda[`F1 <: TransformerFlags` => TransformerFDefinition[F, From, To, C, F1, RuntimeData]], Flags]
     with TransformerDefinitionCommons[
     Lambda[`C1 <: TransformerCfg` => TransformerFDefinition[F, From, To, C1, Flags,RuntimeData]],
-    Lambda[`+NewRuntimeData <: RuntimeStorage` => TransformerFDefinition[F, From, To, C, Flags, NewRuntimeData]],
+    Lambda[(T,`+RD <: RuntimeStorage`) => TransformerFDefinition[F, From, To, C, Flags, T :: RD]],
     RuntimeData
   ] {
 
@@ -146,10 +146,12 @@ final class TransformerFDefinition[F[+_], From, To, C <: TransformerCfg, Flags <
   ): TransformerF[F, From, To] =
     macro TransformerBlackboxMacros.buildTransformerFImpl[F, From, To, C, Flags, ScopeFlags]
 
+  override protected def __updateRuntimeData[@specialized(Int, Short, Long, Double, Float, Char, Byte, Boolean, Unit) T](newRuntimeData: T): TransformerFDefinition[F, From, To, C, Flags, T :: RuntimeData] =
+    new TransformerFDefinition(RuntimeStorage.::[T, RuntimeData](newRuntimeData, runtimeData))
 
-  override protected def __updateRuntimeData[NewRuntimeData <: RuntimeStorage](newRuntimeData: NewRuntimeData): TransformerFDefinition[F, From, To, C, Flags, NewRuntimeData] =
-    new TransformerFDefinition(newRuntimeData)
-
+//  override protected def __updateRuntimeData[NewRuntimeData <: RuntimeStorage](newRuntimeData: NewRuntimeData): TransformerFDefinition[F, From, To, C, Flags, NewRuntimeData] =
+//    new TransformerFDefinition(newRuntimeData)
+//
 //
 //  override protected def __updateRuntimeData(newRuntimeData: TransformerDefinitionCommons.RuntimeDataStore): this.type =
 //    new TransformerFDefinition(newRuntimeData).asInstanceOf[this.type]
