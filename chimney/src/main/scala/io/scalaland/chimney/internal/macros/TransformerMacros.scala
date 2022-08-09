@@ -500,10 +500,12 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
 
         val instanceClauses = fromInstances.map { instTpe =>
           val instName = instTpe.typeSymbol.name.toString
+          val patternVal = freshTermName(s"inst_${instName}")
+          val patternValTree = q"$patternVal"
 
-          resolveCoproductInstance(srcPrefixTree, instTpe, To, config)
+          resolveCoproductInstance(patternValTree, instTpe, To, config)
             .map { instanceTree =>
-              Right(cq"_: $instTpe => $instanceTree")
+              Right(cq"$patternVal: $instTpe => $instanceTree")
             }
             .getOrElse {
               val instSymbol = instTpe.typeSymbol
@@ -568,14 +570,12 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
     val liftedRuntimeDataIdxOpt = config.coproductInstanceFOverrides.get((From.typeSymbol, To))
 
     (config.derivationTarget, pureRuntimeDataIdxOpt, liftedRuntimeDataIdxOpt) match {
-      case (liftedTarget: DerivationTarget.LiftedTransformer, _, Some(runtimeDataIdxLifted)) =>
+      case (_: DerivationTarget.LiftedTransformer, _, Some(runtimeDataIdxLifted)) =>
         Some(
           mkCoproductInstance(
             config.transformerDefinitionPrefix,
             srcPrefixTree,
-            To,
             runtimeDataIdxLifted,
-            liftedTarget
           )
         )
       case (_, Some(runtimeDataIdxPure), _) =>
@@ -584,9 +584,7 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
             mkCoproductInstance(
               config.transformerDefinitionPrefix,
               srcPrefixTree,
-              To,
               runtimeDataIdxPure,
-              DerivationTarget.TotalTransformer
             )
           }
         )

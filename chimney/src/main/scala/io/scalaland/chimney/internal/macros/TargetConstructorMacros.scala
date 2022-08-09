@@ -31,16 +31,11 @@ trait TargetConstructorMacros extends Model with DslMacroUtils {
   def mkCoproductInstance(
       transformerDefinitionPrefix: Tree,
       srcPrefixTree: Tree,
-      To: Type,
       runtimeDataIndex: Int,
-      derivationTarget: DerivationTarget
   ): Tree = {
-    val finalTpe = derivationTarget.targetType(To)
     q"""
       ${transformerDefinitionPrefix.accessRuntimeData(runtimeDataIndex)}
-        .asInstanceOf[Any => $finalTpe]
         .apply($srcPrefixTree)
-        .asInstanceOf[$finalTpe]
     """
   }
 
