@@ -124,7 +124,7 @@ trait TransformerConfigSupport extends MacroUtils {
       extractWrapperType(cfgTpe.typeArgs.last)
     } else {
       // $COVERAGE-OFF$
-      c.abort(c.enclosingPosition, "Bad internal transformer config type shape!")
+      c.abort(c.enclosingPosition, s"Bad internal transformer config type shape (extractWrapperType): ${cfgTpe}!")
       // $COVERAGE-ON$
     }
   }
@@ -175,7 +175,7 @@ trait TransformerConfigSupport extends MacroUtils {
         .coproductInstanceF(instanceType, targetType, runtimeDataIdx)
     } else {
       // $COVERAGE-OFF$
-      c.abort(c.enclosingPosition, "Bad internal transformer config type shape!")
+      c.abort(c.enclosingPosition, s"Bad internal transformer config type shape! ${cfgTpe}")
       // $COVERAGE-ON$
     }
   }

@@ -1,6 +1,7 @@
 package io.scalaland.chimney
 
 import io.scalaland.chimney.dsl._
+import io.scalaland.chimney.dsl.internal.RuntimeStorage
 import io.scalaland.chimney.examples._
 import io.scalaland.chimney.examples.trip._
 import io.scalaland.chimney.utils.EitherUtils._
@@ -850,7 +851,7 @@ object DslFSpec extends TestSuite {
         type F[+A] = Either[List[String], A]
         type DefaultCfg = TransformerCfg.WrapperType[F, TransformerCfg.Empty]
         type Definition[From, To] =
-          TransformerFDefinition[F, From, To, DefaultCfg, TransformerFlags.Default]
+          TransformerFDefinition[F, From, To, DefaultCfg, TransformerFlags.Default, RuntimeStorage.Empty]
 
         def define[From, To]: Definition[From, To] =
           io.scalaland.chimney.TransformerF.define[F, From, To]

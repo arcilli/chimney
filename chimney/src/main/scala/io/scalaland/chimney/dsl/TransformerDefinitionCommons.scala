@@ -1,21 +1,26 @@
 package io.scalaland.chimney.dsl
 
+import io.scalaland.chimney.dsl.internal._
+import io.scalaland.chimney.dsl.internal.RuntimeStorage._
 import io.scalaland.chimney.internal.TransformerCfg
 
 object TransformerDefinitionCommons {
-  type RuntimeDataStore = Vector[Any]
-  def emptyRuntimeDataStore: RuntimeDataStore = Vector.empty[Any]
+  def emptyRuntimeDataStore: RuntimeStorage.Empty = RuntimeStorage.Empty
 }
 
-trait TransformerDefinitionCommons[UpdateCfg[_ <: TransformerCfg]] {
-
-  import TransformerDefinitionCommons._
+trait TransformerDefinitionCommons[
+    +UpdateCfg[_ <: TransformerCfg],
+    +UpdateRuntimeData[+_ <: RuntimeStorage],
+    +RuntimeData <: RuntimeStorage
+] {
 
   /** runtime storage for values and functions that transformer definition is customized with */
-  val runtimeData: RuntimeDataStore
+  val runtimeData: RuntimeData
 
   /** updates runtime data in the upper transformer definition  */
-  protected def __updateRuntimeData(newRuntimeData: RuntimeDataStore): this.type
+  protected def __updateRuntimeData[NewRuntimeData <: RuntimeStorage](
+      newRuntimeData: NewRuntimeData
+  ): UpdateRuntimeData[NewRuntimeData]
 
   // used by generated code to help debugging
 
@@ -24,10 +29,14 @@ trait TransformerDefinitionCommons[UpdateCfg[_ <: TransformerCfg]] {
     this.asInstanceOf[UpdateCfg[C1]]
 
   /** Used internally by macro. Please don't use in your code. */
-  def __addOverride(overrideData: Any): this.type =
-    __updateRuntimeData(overrideData +: runtimeData)
+  def __addOverride[@specialized(Int, Short, Long, Double, Float, Char, Byte, Boolean, Unit) T](
+      overrideData: T
+  ): UpdateRuntimeData[T :: RuntimeData] =
+    __updateRuntimeData[T :: RuntimeData](RuntimeStorage.::(overrideData, runtimeData))
 
   /** Used internally by macro. Please don't use in your code. */
-  def __addInstance(instanceData: Any): this.type =
-    __updateRuntimeData(instanceData +: runtimeData)
+  def __addInstance[@specialized(Int, Short, Long, Double, Float, Char, Byte, Boolean, Unit) T](
+      instanceData: T
+  ): UpdateRuntimeData[T :: RuntimeData] =
+    __updateRuntimeData[T :: RuntimeData](RuntimeStorage.::(instanceData, runtimeData))
 }

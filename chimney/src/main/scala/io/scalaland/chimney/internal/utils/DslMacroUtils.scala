@@ -2,6 +2,7 @@ package io.scalaland.chimney.internal.utils
 
 import io.scalaland.chimney.internal.macros.TransformerConfigSupport
 
+import scala.annotation.{tailrec, unused}
 import scala.reflect.macros.blackbox
 
 trait DslMacroUtils extends MacroUtils with TransformerConfigSupport {
@@ -14,15 +15,28 @@ trait DslMacroUtils extends MacroUtils with TransformerConfigSupport {
   implicit class TransformerDefinitionTreeOps(td: Tree) {
 
     def accessRuntimeData(runtimeDataIdx: Int): Tree = {
-      q"$td.runtimeData($runtimeDataIdx)"
+
+      @tailrec def rec(runtimeDataTree: Tree, n: Int): Tree = {
+        if(n == 0) {
+          q"${runtimeDataTree}.head"
+        } else {
+          rec(q"${runtimeDataTree}.tail", n - 1)
+        }
+      }
+
+      rec(q"$td.runtimeData", runtimeDataIdx)
+
+//      q"$td.runtimeData($runtimeDataIdx)"
     }
 
-    def accessOverriddenConstValue(runtimeDataIdx: Int, targetTpe: Type): Tree = {
-      q"${td.accessRuntimeData(runtimeDataIdx)}.asInstanceOf[$targetTpe]"
+    def accessOverriddenConstValue(runtimeDataIdx: Int, @unused targetTpe: Type): Tree = {
+      q"${td.accessRuntimeData(runtimeDataIdx)}"
+//      q"${td.accessRuntimeData(runtimeDataIdx)}.asInstanceOf[$targetTpe]"
     }
 
-    def accessOverriddenComputedFunction(runtimeDataIdx: Int, fromTpe: Type, targetTpe: Type): Tree = {
-      q"${td.accessRuntimeData(runtimeDataIdx)}.asInstanceOf[$fromTpe => $targetTpe]"
+    def accessOverriddenComputedFunction(runtimeDataIdx: Int, @unused fromTpe: Type, @unused targetTpe: Type): Tree = {
+      q"${td.accessRuntimeData(runtimeDataIdx)}"
+//      q"${td.accessRuntimeData(runtimeDataIdx)}.asInstanceOf[$fromTpe => $targetTpe]"
     }
 
     def overrideField[C: WeakTypeTag](fieldName: Name, overrideTree: Tree, configWrapperTC: Type): Tree = {
@@ -73,11 +87,11 @@ trait DslMacroUtils extends MacroUtils with TransformerConfigSupport {
     }
 
     def addOverride(overrideTree: Tree): Tree = {
-      q"$td.__addOverride(${overrideTree}.asInstanceOf[Any])"
+      q"$td.__addOverride(${overrideTree})"
     }
 
     def addInstance(f: Tree): Tree = {
-      q"$td.__addInstance(${f}.asInstanceOf[Any])"
+      q"$td.__addInstance(${f})"
     }
 
     def refineConfig(cfgTpe: Type): Tree = {

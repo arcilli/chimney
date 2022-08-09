@@ -1,5 +1,6 @@
 package io.scalaland.chimney
 
+import io.scalaland.chimney.dsl.internal.RuntimeStorage
 import io.scalaland.chimney.internal.{PatcherCfg, TransformerCfg, TransformerFlags}
 
 /** Main object to import in order to use Chimney's features
@@ -18,7 +19,7 @@ package object dsl {
       * @tparam To target type
       * @return [[io.scalaland.chimney.dsl.TransformerInto]]
       */
-    final def into[To]: TransformerInto[From, To, TransformerCfg.Empty, TransformerFlags.Default] =
+    final def into[To]: TransformerInto[From, To, TransformerCfg.Empty, TransformerFlags.Default, RuntimeStorage.Empty] =
       new TransformerInto(source, new TransformerDefinition(TransformerDefinitionCommons.emptyRuntimeDataStore))
 
     /** Performs in-place transformation of captured source value to target type.
@@ -44,7 +45,7 @@ package object dsl {
       * @return [[io.scalaland.chimney.dsl.TransformerFInto]]
       */
     final def intoF[F[+_], To]
-        : TransformerFInto[F, From, To, TransformerCfg.WrapperType[F, TransformerCfg.Empty], TransformerFlags.Default] =
+        : TransformerFInto[F, From, To, TransformerCfg.WrapperType[F, TransformerCfg.Empty], TransformerFlags.Default, RuntimeStorage.Empty] =
       new TransformerFInto(source, new TransformerFDefinition(TransformerDefinitionCommons.emptyRuntimeDataStore))
 
     /** Performs in-place wrapped transformation of captured source value to target type.
