@@ -106,7 +106,6 @@ trait TargetConstructorMacros extends Model with AssertUtils {
         mkTargetValueTree(bodyTreeArgs.map(_.tree))
 
       case pt: DerivationTarget.PartialTransformer =>
-
         assertOrAbort(
           bodyTreeArgs.forall(a => a.isTotalTarget || a.isPartialTarget),
           "Only Total and Partial body tree arguments are supported in Partial target derivation!"
@@ -114,7 +113,7 @@ trait TargetConstructorMacros extends Model with AssertUtils {
 
         val (totalArgs, partialArgs) = (targets zip bodyTreeArgs).partition(_._2.isTotalTarget)
 
-        if(partialArgs.isEmpty) {
+        if (partialArgs.isEmpty) {
           mkTransformerBodyTree0(pt)(mkTargetValueTree(bodyTreeArgs.map(_.tree)))
         } else {
           val (partialTargets, partialBodyTrees) = partialArgs.unzip
@@ -125,7 +124,9 @@ trait TargetConstructorMacros extends Model with AssertUtils {
 
           val argIndices = partialTargets.indices
 
-          val patRefArgsMap = (partialTargets zip argIndices).map { case (target, argIndex) => target -> q"$arrayFn($argIndex)" }.toMap
+          val patRefArgsMap = (partialTargets zip argIndices).map {
+            case (target, argIndex) => target -> q"$arrayFn($argIndex)"
+          }.toMap
           val pureArgsMap = totalArgs.map { case (target, bt) => target -> bt.tree }.toMap
           val argsMap = pureArgsMap ++ patRefArgsMap
 
@@ -139,8 +140,7 @@ trait TargetConstructorMacros extends Model with AssertUtils {
            """
         }
 
-      case lt@DerivationTarget.LiftedTransformer(_, wrapperSupportInstance, _) =>
-
+      case lt @ DerivationTarget.LiftedTransformer(_, wrapperSupportInstance, _) =>
         assertOrAbort(
           bodyTreeArgs.forall(a => a.isTotalTarget || a.isLiftedTarget),
           "Only Total and Lifted body tree arguments are supported in Lifted target derivation!"
@@ -167,7 +167,7 @@ trait TargetConstructorMacros extends Model with AssertUtils {
           val patternF = bindTreesF.reduceRight[Tree]((param, tree) => pq"(..${List(param, tree)})")
 
           val patRefArgsMap = (liftedTargets zip argNames).map { case (target, argName) => target -> q"$argName" }.toMap
-          val pureArgsMap = totalArgs.map { case (target, bt)                             => target -> bt.tree }.toMap
+          val pureArgsMap = totalArgs.map { case (target, bt)                           => target -> bt.tree }.toMap
           val argsMap = pureArgsMap ++ patRefArgsMap
 
           val updatedArgs = targets.map(argsMap)

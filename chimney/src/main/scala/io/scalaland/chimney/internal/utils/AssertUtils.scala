@@ -7,6 +7,8 @@ trait AssertUtils extends CompanionUtils {
   val c: blackbox.Context
 
   def assertOrAbort(cond: Boolean, errMessage: => String): Unit = {
-    if(!cond) { c.abort(c.enclosingPosition, errMessage) }
+    if (!cond) {
+      c.abort(c.enclosingPosition, errMessage)
+    }
   }
 }

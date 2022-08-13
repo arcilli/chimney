@@ -60,7 +60,7 @@ trait TransformerConfigSupport extends MacroUtils {
       coproductInstances: Set[(Symbol, Type)] = Set.empty, // pair: inst type, target type
       transformerDefinitionPrefix: Tree = EmptyTree,
       definitionScope: Option[(Type, Type)] = None,
-      coproductInstancesF: Set[(Symbol, Type)] = Set.empty, // pair: inst type, target type
+      coproductInstancesF: Set[(Symbol, Type)] = Set.empty // pair: inst type, target type
   ) {
 
     def withDerivationTarget(derivationTarget: DerivationTarget): TransformerConfig = {
