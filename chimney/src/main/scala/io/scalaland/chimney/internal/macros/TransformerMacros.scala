@@ -290,6 +290,15 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
               q"$srcPrefixTree.map(($fn: $fromInnerT) => $innerTree)"
             }
 
+          case TransformerBodyTree(innerTree, DerivationTarget.PartialTransformer(_)) =>
+            q"""
+              $srcPrefixTree.fold[_root_.io.scalaland.chimney.PartialTransformer.Result[$To]](
+                _root_.io.scalaland.chimney.PartialTransformer.Result.fromValue(Option.empty[$toInnerT])
+              )(
+                ($fn: $fromInnerT) => $innerTree.map(Option.apply[$toInnerT])
+              )
+            """
+
           case TransformerBodyTree(
               innerTree,
               DerivationTarget.LiftedTransformer(wrapperType, wrapperSupportInstance, _)
@@ -404,6 +413,8 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
                    )"""
                 case DerivationTarget.TotalTransformer =>
                   q"${wrapperSupportInstance}.pure[$toKeyT](${keyTransformer.tree})"
+                case _: DerivationTarget.PartialTransformer =>
+                  c.abort(c.enclosingPosition, "Not supported for partial transformers!")
               }
 
             val valueTransformerWithPath =
@@ -415,6 +426,8 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
                    )"""
                 case DerivationTarget.TotalTransformer =>
                   q"${wrapperSupportInstance}.pure[$toValueT](${valueTransformer.tree})"
+                case _: DerivationTarget.PartialTransformer =>
+                  c.abort(c.enclosingPosition, "Not supported for partial transformers!")
               }
 
             Right(
@@ -433,6 +446,9 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
           case _ =>
             Left(keyTransformerE.left.getOrElse(Nil) ++ valueTransformerE.left.getOrElse(Nil))
         }
+
+      case (DerivationTarget.PartialTransformer(_), List(_, _)) =>
+        ??? // TODO: impl for partial transformers
       case _ =>
         expandIterableOrArray(srcPrefixTree, config)(From, To)
     }
@@ -470,11 +486,21 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
             innerTransformerTree,
             DerivationTarget.LiftedTransformer(_, wrapperSupportInstance, None)
             ) =>
-          q"""${wrapperSupportInstance}.traverse[$To, $FromInnerT, $ToInnerT](
-            $srcPrefixTree.iterator,
-            ($fn: $FromInnerT) => $innerTransformerTree
-          )
+          q"""
+            ${wrapperSupportInstance}.traverse[$To, $FromInnerT, $ToInnerT](
+              $srcPrefixTree.iterator,
+              ($fn: $FromInnerT) => $innerTransformerTree
+            )
           """
+        case TransformerBodyTree(innerTransformerTree, pt @ DerivationTarget.PartialTransformer(_)) =>
+          q"""
+            _root_.io.scalaland.chimney.PartialTransformer.Result.traverse[$To, $FromInnerT, $ToInnerT](
+              $srcPrefixTree.iterator,
+              ($fn: $FromInnerT) => $innerTransformerTree,
+              ${pt.failFastTree}
+            )
+          """
+
         case TransformerBodyTree(innerTransformerTree, DerivationTarget.TotalTransformer) =>
           def isTransformationIdentity = fn == innerTransformerTree
           def sameCollectionTypes = From.typeConstructor =:= To.typeConstructor
@@ -498,10 +524,12 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
           }
 
           config.derivationTarget match {
-            case DerivationTarget.LiftedTransformer(_, wrapperSupportInstance, _) =>
-              q"${wrapperSupportInstance}.pure($transformedCollectionTree)"
             case DerivationTarget.TotalTransformer =>
               transformedCollectionTree
+            case DerivationTarget.PartialTransformer(_) =>
+              q"_root_.io.scalaland.chimney.PartialTransformer.Result.fromValue($transformedCollectionTree)"
+            case DerivationTarget.LiftedTransformer(_, wrapperSupportInstance, _) =>
+              q"${wrapperSupportInstance}.pure($transformedCollectionTree)"
           }
       }
   }
@@ -841,6 +869,8 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
     val searchTypeTree: Tree = derivationTarget match {
       case DerivationTarget.LiftedTransformer(f, _, _) =>
         tq"_root_.io.scalaland.chimney.TransformerF[$f, $From, $To]"
+      case DerivationTarget.PartialTransformer(_) =>
+        tq"_root_.io.scalaland.chimney.PartialTransformer[$From, $To]"
       case DerivationTarget.TotalTransformer =>
         tq"_root_.io.scalaland.chimney.Transformer[$From, $To]"
     }

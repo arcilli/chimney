@@ -70,6 +70,12 @@ object PartialTransformer {
         case errs: Result.Errors => errs
       }
     }
+    def flatMap[U](f: T => Result[U]): Result[U] = {
+      this match {
+        case Result.Value(value) => f(value)
+        case errs: Result.Errors => errs
+      }
+    }
   }
   object Result {
     case class Value[T](value: T) extends Result[T]
@@ -174,7 +180,7 @@ object PartialTransformer {
         while (allErrors.isEmpty && it.hasNext) {
           f(it.next()) match {
             case Value(value) => b += value
-            case Errors(ee) => allErrors ++= ee
+            case Errors(ee)   => allErrors ++= ee
           }
         }
         if (allErrors.isEmpty) Result.Value(b.result()) else Result.Errors(allErrors)
