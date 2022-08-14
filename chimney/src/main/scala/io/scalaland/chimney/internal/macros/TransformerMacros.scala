@@ -496,6 +496,7 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
             )
           """
         case TransformerBodyTree(innerTransformerTree, pt @ DerivationTarget.PartialTransformer(_)) =>
+          // TODO: add error paths wrapping
           q"""
             _root_.io.scalaland.chimney.PartialTransformer.Result.traverse[$To, $FromInnerT, $ToInnerT](
               $srcPrefixTree.iterator,
@@ -797,6 +798,17 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
                  ${bodyTree.tree},
                  _root_.io.scalaland.chimney.ErrorPathNode.Accessor(${accessor.symbol.name.toString})
                )""",
+            config.derivationTarget
+          )
+        }
+      case (Right(bodyTree), DerivationTarget.PartialTransformer(_)) if bodyTree.isPartialTarget =>
+        Right {
+          TransformerBodyTree(
+            q"""
+              ${bodyTree.tree}.wrapErrorPaths(
+                _root_.io.scalaland.chimney.PartialTransformer.ErrorPath.Accessor(${accessor.symbol.name.toString}, _)
+              )
+            """,
             config.derivationTarget
           )
         }

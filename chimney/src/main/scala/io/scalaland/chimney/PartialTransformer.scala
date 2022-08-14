@@ -60,8 +60,8 @@ object PartialTransformer {
       case Result.Value(value)       => Right(value)
       case errors @ Result.Errors(_) => Left(errors)
     }
-    def asErrorPathMessagesStrings: Seq[(String, String)] = this match {
-      case Result.Value(_)       => Seq.empty
+    def asErrorPathMessagesStrings: Vector[(String, String)] = this match {
+      case Result.Value(_)       => Vector.empty
       case errors: Result.Errors => errors.asErrorPathMessageStrings
     }
     def map[U](f: T => U): Result[U] = {
@@ -76,15 +76,16 @@ object PartialTransformer {
         case errs: Result.Errors => errs
       }
     }
+    def wrapErrorPaths(pathWrapper: ErrorPath => ErrorPath): this.type = this match {
+      case Result.Value(_)       => this
+      case Result.Errors(errors) => Result.Errors(errors.map(_.wrapErrorPath(pathWrapper))).asInstanceOf[this.type]
+    }
   }
   object Result {
     case class Value[T](value: T) extends Result[T]
     case class Errors(errors: Vector[Error]) extends Result[Nothing] {
       def asErrorPathMessageStrings: Vector[(String, String)] = {
         errors.map(_.asErrorPathMessageString)
-      }
-      def wrapErrorPaths(pathWrapper: ErrorPath => ErrorPath): Errors = {
-        Errors(errors.map(_.wrapErrorPath(pathWrapper)))
       }
     }
     object Errors {
@@ -227,6 +228,7 @@ object PartialTransformer {
   sealed trait ErrorPath {
     def asString: String = this match {
       case ErrorPath.Empty                  => ""
+      case ErrorPath.Accessor(name, ErrorPath.Empty) => s"$name"
       case ErrorPath.Accessor(name, nested) => s"$name.${nested.asString}"
       case ErrorPath.Index(index, nested)   => s"($index).${nested.asString}"
       case ErrorPath.MapValue(key, nested)  => s"($key).${nested.asString}"

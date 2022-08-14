@@ -74,92 +74,88 @@ object PartialDslSpec extends TestSuite {
       }
     }
 
-//    "transform always fails" - {
-//
-//      "empty value" - {
-//        val result = Person("John", 10, 140)
-//          .intoPartial[User]
-//          .withFieldConstPartial(_.height, PartialTransformer.Result.fromEmpty)
-//          .transform
-//
-//        result.asOption ==> None
-//        result.asEither ==> Left(
-//          PartialTransformer.Result.Errors
-//            .single(PartialTransformer.Error.ofEmptyValue)
-//            .wrapErrorPaths(PartialTransformer.ErrorPath.Accessor("height", _))
-//        )
-//        result.asErrorPathMessagesStrings ==> Seq(
-//          "height" -> "empty value"
-//        )
-//      }
-//
-//      "not defined at" - {
-//        val person = Person("John", 10, 140)
-//        val result = person
-//          .intoPartial[User]
-//          .withFieldComputedPartial(_.height, PartialTransformer.Result.fromPartialFunction {
-//            case Person(_, age, _) if age > 18 => 2.0 * age
-//          })
-//          .transform
-//
-//        result.asOption ==> None
-//        result.asEither ==> Left(
-//          PartialTransformer.Result.Errors
-//            .single(PartialTransformer.Error.ofNotDefinedAt(person))
-//            .wrapErrorPaths(PartialTransformer.ErrorPath.Accessor("height", _))
-//        )
-//        result.asErrorPathMessagesStrings ==> Seq(
-//          "height" -> s"not defined at value $person"
-//        )
-//      }
-//
-//      "custom string errors" - {
-//        val result = Person("John", 10, 140)
-//          .intoPartial[User]
-//          .withFieldConstPartial(_.height, PartialTransformer.Result.fromErrorStrings(Seq("abc", "def")))
-//          .transform
-//
-//        result.asOption ==> Nil
-//        result.asEither == Left(
-//          PartialTransformer.Result
-//            .Errors(
-//              Seq(
-//                PartialTransformer.Error.ofString("abc"),
-//                PartialTransformer.Error.ofString("def")
-//              )
-//            )
-//            .wrapErrorPaths(PartialTransformer.ErrorPath.Accessor("height", _))
-//        )
-//        result.asErrorPathMessagesStrings ==> Left(
-//          Seq(
-//            "height" -> "abc",
-//            "height" -> "def"
-//          )
-//        )
-//      }
-//
-//      "throwable error" - {
-//        case object MyException extends Exception("my exception")
-//        val result = Person("John", 10, 140)
-//          .intoPartial[User]
-//          .withFieldConstPartial(_.height, PartialTransformer.Result.fromErrorThrowable(MyException))
-//          .transform
-//
-//        result.asOption ==> Nil
-//        result.asEither == Left(
-//          PartialTransformer.Result.Errors
-//            .single(
-//              PartialTransformer.Error.ofThrowable(MyException)
-//            )
-//            .wrapErrorPaths(PartialTransformer.ErrorPath.Accessor("height", _))
-//        )
-//        result.asErrorPathMessagesStrings ==> Left(
-//          Seq(
-//            "height" -> "my exception"
-//          )
-//        )
-//      }
-//    }
+    "transform always fails" - {
+
+      "empty value" - {
+        val result = Person("John", 10, 140)
+          .intoPartial[User]
+          .withFieldConstPartial(_.height, PartialTransformer.Result.fromEmpty)
+          .transform
+
+        result.asOption ==> None
+        result.asEither ==> Left(
+          PartialTransformer.Result.Errors
+            .single(PartialTransformer.Error.ofEmptyValue)
+            .wrapErrorPaths(PartialTransformer.ErrorPath.Accessor("height", _))
+        )
+        result.asErrorPathMessagesStrings ==> Vector(
+          "height" -> "empty value"
+        )
+      }
+
+      "not defined at" - {
+        val person = Person("John", 10, 140)
+        val result = person
+          .intoPartial[User]
+          .withFieldComputedPartial(_.height, PartialTransformer.Result.fromPartialFunction {
+            case Person(_, age, _) if age > 18 => 2.0 * age
+          })
+          .transform
+
+        result.asOption ==> None
+        result.asEither ==> Left(
+          PartialTransformer.Result.Errors
+            .single(PartialTransformer.Error.ofNotDefinedAt(person))
+            .wrapErrorPaths(PartialTransformer.ErrorPath.Accessor("height", _))
+        )
+        result.asErrorPathMessagesStrings ==> Vector(
+          "height" -> s"not defined at $person"
+        )
+      }
+
+      "custom string errors" - {
+        val result = Person("John", 10, 140)
+          .intoPartial[User]
+          .withFieldConstPartial(_.height, PartialTransformer.Result.fromErrorStrings(Seq("abc", "def")))
+          .transform
+
+        result.asOption ==> None
+        result.asEither == Left(
+          PartialTransformer.Result
+            .Errors(
+              Vector(
+                PartialTransformer.Error.ofString("abc"),
+                PartialTransformer.Error.ofString("def")
+              )
+            )
+            .wrapErrorPaths(PartialTransformer.ErrorPath.Accessor("height", _))
+        )
+        result.asErrorPathMessagesStrings ==> Vector(
+          "height" -> "abc",
+          "height" -> "def"
+        )
+      }
+
+      "throwable error" - {
+        case object MyException extends Exception("my exception")
+        val result = Person("John", 10, 140)
+          .intoPartial[User]
+          .withFieldConstPartial(_.height, PartialTransformer.Result.fromErrorThrowable(MyException))
+          .transform
+
+        result.asOption ==> None
+        result.asEither == Left(
+          PartialTransformer.Result.Errors
+            .single(
+              PartialTransformer.Error.ofThrowable(MyException)
+            )
+            .wrapErrorPaths(PartialTransformer.ErrorPath.Accessor("height", _))
+        )
+        result.asErrorPathMessagesStrings ==> Vector(
+          "height" -> "my exception"
+        )
+      }
+    }
 //
 //    "partial transform validation" - {
 //

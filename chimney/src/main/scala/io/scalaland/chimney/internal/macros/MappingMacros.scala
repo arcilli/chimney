@@ -84,7 +84,11 @@ trait MappingMacros extends Model with TypeTestUtils with DslMacroUtils {
           val fTargetTpe = config.derivationTarget.targetType(target.tpe)
           Some {
             target -> TransformerBodyTree(
-              config.transformerDefinitionPrefix.accessOverriddenConstValue(target.name, fTargetTpe),
+              q"""
+                ${config.transformerDefinitionPrefix.accessOverriddenConstValue(target.name, fTargetTpe)}.wrapErrorPaths(
+                  _root_.io.scalaland.chimney.PartialTransformer.ErrorPath.Accessor(${target.name}, _)
+                )
+              """,
               config.derivationTarget
             )
           }
@@ -110,9 +114,14 @@ trait MappingMacros extends Model with TypeTestUtils with DslMacroUtils {
           val fTargetTpe = config.derivationTarget.targetType(target.tpe)
           Some {
             target -> TransformerBodyTree(
-              config.transformerDefinitionPrefix
-                .accessOverriddenComputedFunction(target.name, From, fTargetTpe)
-                .callUnaryApply(srcPrefixTree),
+              q"""
+                ${config.transformerDefinitionPrefix
+                  .accessOverriddenComputedFunction(target.name, From, fTargetTpe)
+                  .callUnaryApply(srcPrefixTree)}
+                  .wrapErrorPaths(
+                    _root_.io.scalaland.chimney.PartialTransformer.ErrorPath.Accessor(${target.name}, _)
+                  )
+              """,
               config.derivationTarget
             )
           }
