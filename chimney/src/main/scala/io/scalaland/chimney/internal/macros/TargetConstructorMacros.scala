@@ -126,8 +126,8 @@ trait TargetConstructorMacros extends Model with AssertUtils {
           val patRefArgsMap = (partialTargets zip argIndices).map {
             case (target, argIndex) => target -> q"$arrayFn.apply($argIndex).asInstanceOf[${target.tpe}]"
           }.toMap
-          val pureArgsMap = totalArgs.map { case (target, bt) => target -> bt.tree }.toMap
-          val argsMap = pureArgsMap ++ patRefArgsMap
+          val totalArgsMap = totalArgs.map { case (target, bt) => target -> bt.tree }.toMap
+          val argsMap = totalArgsMap ++ patRefArgsMap
 
           val updatedArgs = targets.map(argsMap)
 
