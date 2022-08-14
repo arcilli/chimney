@@ -106,7 +106,7 @@ trait TransformerConfigSupport extends MacroUtils {
 
     val emptyT: Type = typeOf[Empty]
     val fieldConstT: Type = typeOf[FieldConst[_, _]].typeConstructor
-    val fieldConstPartialT: Type = typeOf[FieldConst[_, _]].typeConstructor
+    val fieldConstPartialT: Type = typeOf[FieldConstPartial[_, _]].typeConstructor
     val fieldConstFT: Type = typeOf[FieldConstF[_, _]].typeConstructor
     val fieldComputedT: Type = typeOf[FieldComputed[_, _]].typeConstructor
     val fieldComputedPartialT: Type = typeOf[FieldComputedPartial[_, _]].typeConstructor
