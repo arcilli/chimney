@@ -120,12 +120,11 @@ trait TargetConstructorMacros extends Model with AssertUtils {
           val partialTrees = partialBodyTrees.map(_.tree)
           val partialTreesArray = q"Array(..${partialTrees})"
           val arrayFn = freshTermName("array")
-          val arrayFnTree = q"$arrayFn"
 
           val argIndices = partialTargets.indices
 
           val patRefArgsMap = (partialTargets zip argIndices).map {
-            case (target, argIndex) => target -> q"$arrayFn($argIndex)"
+            case (target, argIndex) => target -> q"$arrayFn.apply($argIndex).asInstanceOf[${target.tpe}]"
           }.toMap
           val pureArgsMap = totalArgs.map { case (target, bt) => target -> bt.tree }.toMap
           val argsMap = pureArgsMap ++ patRefArgsMap
@@ -134,7 +133,7 @@ trait TargetConstructorMacros extends Model with AssertUtils {
 
           q"""
              _root_.io.scalaland.chimney.PartialTransformer.Result.sequence(${partialTreesArray}.iterator, ${pt.failFastTree})
-               .map { $arrayFnTree =>
+               .map { ($arrayFn: Array[_]) =>
                   ${mkTargetValueTree(updatedArgs)}
                }
            """

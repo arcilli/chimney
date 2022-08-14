@@ -78,7 +78,6 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
   def genTransformer[From: WeakTypeTag, To: WeakTypeTag](
       config: TransformerConfig
   ): Tree = {
-
     val From = weakTypeOf[From]
     val To = weakTypeOf[To]
 
@@ -99,7 +98,7 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
           case pt: DerivationTarget.PartialTransformer =>
             q"""
                new _root_.io.scalaland.chimney.PartialTransformer[$From, $To] {
-                 def transform($srcName: $From, ${pt.failFastTermName}: Boolean): $To = {
+                 def transform($srcName: $From, ${pt.failFastTermName}: Boolean): ${pt.targetType(To)} = {
                    $transformerTree
                  }
                }
@@ -138,6 +137,8 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
         (config.derivationTarget, derivedTarget) match {
           case (DerivationTarget.LiftedTransformer(_, wrapperSupportInstance, _), DerivationTarget.TotalTransformer) =>
             q"${wrapperSupportInstance}.pure[$To]($tree)"
+          case (DerivationTarget.PartialTransformer(_), DerivationTarget.TotalTransformer) =>
+            q"_root_.io.scalaland.chimney.PartialTransformer.Result.Value[$To]($tree)"
           case _ =>
             tree
         }
@@ -447,8 +448,10 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
             Left(keyTransformerE.left.getOrElse(Nil) ++ valueTransformerE.left.getOrElse(Nil))
         }
 
-      case (DerivationTarget.PartialTransformer(_), List(_, _)) =>
-        ??? // TODO: impl for partial transformers
+//      case (DerivationTarget.PartialTransformer(_), List(_, _)) =>
+//        c.abort(c.enclosingPosition, "Not supported for partial transformers!")
+//
+//        Right(q"???") // TODO: impl for partial transformers
       case _ =>
         expandIterableOrArray(srcPrefixTree, config)(From, To)
     }
@@ -670,7 +673,6 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
       srcPrefixTree: Tree,
       config: TransformerConfig
   )(From: Type, To: Type): Either[Seq[TransformerDerivationError], Tree] = {
-
     val targets = To.caseClassParams.map(Target.fromField(_, To))
 
     val targetTransformerBodiesMapping = if (isTuple(From)) {
@@ -843,7 +845,6 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
       case pt@DerivationTarget.PartialTransformer(_) =>
         val implicitPartialTransformer = resolveImplicitTransformer(config)(From, To)
         val implicitTransformer = findLocalImplicitTransformer(From, To, DerivationTarget.TotalTransformer)
-
 
         (implicitPartialTransformer, implicitTransformer) match {
           case (Some(localImplicitTreePartial), Some(localImplicitTree)) =>
