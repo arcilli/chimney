@@ -209,66 +209,68 @@ object PartialDslSpec extends TestSuite {
         )
       }
     }
-//
-//    "recursive partial transform with nested validation" - {
-//
-//      implicit val personPartialTransformer: PartialTransformer[PersonForm, Person] =
-//        Transformer
-//          .definePartial[PersonForm, Person]
-//          .withFieldComputedPartial(_.age, _.age.parseInt.toPartialTransformerResultOrString("bad age value"))
-//          .withFieldComputedPartial(
-//            _.height,
-//            _.height.parseDouble.toPartialTransformerResultOrString("bad height value")
-//          )
-//          .buildTransformer
-//
-//      "success" - {
-//
-//        val okTripForm = TripForm("100", List(PersonForm("John", "10", "140"), PersonForm("Caroline", "12", "155")))
-//
-//        okTripForm
-//          .intoPartial[Trip]
-//          .withFieldComputedPartial(_.id, _.tripId.parseInt.toPartialTransformerResultOrString("bad trip id"))
-//          .transform ==> Some(Trip(100, Vector(Person("John", 10, 140), Person("Caroline", 12, 155))))
-//      }
-//
-//      "failure with error handling" - {
-//
-//        val badTripForm =
-//          TripForm("100xyz", List(PersonForm("John", "10", "foo"), PersonForm("Caroline", "bar", "155")))
-//
-//        val result = badTripForm
-//          .intoPartial[Trip]
-//          .withFieldComputedPartial(_.id, _.tripId.parseInt.toPartialTransformerResultOrString("bad trip id"))
-//          .transform
-//
-//        result.asOption ==> None
-//        result.asEither ==> Left(
-//          PartialTransformer.Result.Errors(
-//            Seq(
-//              PartialTransformer.Error
-//                .ofString("bad trip id")
-//                .wrapErrorPath(PartialTransformer.ErrorPath.Accessor("id", _)),
-//              PartialTransformer.Error
-//                .ofString("bad height value")
-//                .wrapErrorPath(PartialTransformer.ErrorPath.Accessor("height", _))
-//                .wrapErrorPath(PartialTransformer.ErrorPath.Index(0, _))
-//                .wrapErrorPath(PartialTransformer.ErrorPath.Accessor("people", _)),
-//              PartialTransformer.Error
-//                .ofString("bad age value")
-//                .wrapErrorPath(PartialTransformer.ErrorPath.Accessor("age", _))
-//                .wrapErrorPath(PartialTransformer.ErrorPath.Index(1, _))
-//                .wrapErrorPath(PartialTransformer.ErrorPath.Accessor("people", _))
-//            )
-//          )
-//        )
-//        result.asErrorPathMessagesStrings ==> Seq(
-//          "id" -> "bad trip id",
-//          "people(0).height" -> "bad height value",
-//          "people(1).age" -> "bad age value"
-//        )
-//      }
-//    }
+
+    "recursive partial transform with nested validation" - {
+
+      implicit val personPartialTransformer: PartialTransformer[PersonForm, Person] =
+        Transformer
+          .definePartial[PersonForm, Person]
+          .withFieldComputedPartial(_.age, _.age.parseInt.toPartialTransformerResultOrString("bad age value"))
+          .withFieldComputedPartial(
+            _.height,
+            _.height.parseDouble.toPartialTransformerResultOrString("bad height value")
+          )
+          .buildTransformer
+
+      "success" - {
+
+        val okTripForm = TripForm("100", List(PersonForm("John", "10", "140"), PersonForm("Caroline", "12", "155")))
+
+        val result = okTripForm
+          .intoPartial[Trip]
+          .withFieldComputedPartial(_.id, _.tripId.parseInt.toPartialTransformerResultOrString("bad trip id"))
+          .transform
+
+        result.asOption ==> Some(Trip(100, Vector(Person("John", 10, 140), Person("Caroline", 12, 155))))
+      }
+
+      "failure with error handling" - {
+
+        val badTripForm =
+          TripForm("100xyz", List(PersonForm("John", "10", "foo"), PersonForm("Caroline", "bar", "155")))
+
+        val result = badTripForm
+          .intoPartial[Trip]
+          .withFieldComputedPartial(_.id, _.tripId.parseInt.toPartialTransformerResultOrString("bad trip id"))
+          .transform
+
+        result.asOption ==> None
+        result.asEither ==> Left(
+          PartialTransformer.Result.Errors(
+            Vector(
+              PartialTransformer.Error
+                .ofString("bad trip id")
+                .wrapErrorPath(PartialTransformer.ErrorPath.Accessor("id", _)),
+              PartialTransformer.Error
+                .ofString("bad height value")
+                .wrapErrorPath(PartialTransformer.ErrorPath.Accessor("height", _))
+                .wrapErrorPath(PartialTransformer.ErrorPath.Index(0, _))
+                .wrapErrorPath(PartialTransformer.ErrorPath.Accessor("people", _)),
+              PartialTransformer.Error
+                .ofString("bad age value")
+                .wrapErrorPath(PartialTransformer.ErrorPath.Accessor("age", _))
+                .wrapErrorPath(PartialTransformer.ErrorPath.Index(1, _))
+                .wrapErrorPath(PartialTransformer.ErrorPath.Accessor("people", _))
+            )
+          )
+        )
+        result.asErrorPathMessagesStrings ==> Vector(
+          "id" -> "bad trip id",
+          "people(0).height" -> "bad height value",
+          "people(1).age" -> "bad age value"
+        )
+      }
+    }
 //
 //    "partial subtype transform" - {
 //      class Foo(val x: Int)

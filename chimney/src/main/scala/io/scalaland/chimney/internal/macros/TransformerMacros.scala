@@ -496,11 +496,13 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
             )
           """
         case TransformerBodyTree(innerTransformerTree, pt @ DerivationTarget.PartialTransformer(_)) =>
-          // TODO: add error paths wrapping
+          val idx = Ident(freshTermName("idx"))
           q"""
             _root_.io.scalaland.chimney.PartialTransformer.Result.traverse[$To, $FromInnerT, $ToInnerT](
-              $srcPrefixTree.iterator,
-              ($fn: $FromInnerT) => $innerTransformerTree,
+              $srcPrefixTree.iterator.zipWithIndex,
+              { case (${fn.name}: $FromInnerT, ${idx.name}: _root_.scala.Int) =>
+                $innerTransformerTree.wrapErrorPath(PartialTransformer.ErrorPath.Index($idx, _))
+              },
               ${pt.failFastTree}
             )
           """
