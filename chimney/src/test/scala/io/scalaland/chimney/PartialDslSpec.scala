@@ -37,41 +37,41 @@ object PartialDslSpec extends TestSuite {
         result.asErrorPathMessagesStrings ==> Seq.empty
       }
 
-//      "field partial const override" - {
-//        val result = Person("John", 10, 140)
-//          .intoPartial[User]
-//          .withFieldConstPartial(_.age, PartialTransformer.Result.fromValue(20))
-//          .transform
-//        val expected = User("John", 20, 140)
-//
-//        result.asOption ==> Some(expected)
-//        result.asEither ==> Right(expected)
-//        result.asErrorPathMessagesStrings ==> Seq.empty
-//      }
-//
-//      "field compute" - {
-//        val result = Person("John", 10, 140)
-//          .intoPartial[User]
-//          .withFieldComputed(_.age, _.age * 3)
-//          .transform
-//        val expected = User("John", 30, 140)
-//
-//        result.asOption ==> Some(expected)
-//        result.asEither ==> Right(expected)
-//        result.asErrorPathMessagesStrings ==> Seq.empty
-//      }
-//
-//      "field compute partial" - {
-//        val result = Person("John", 10, 140)
-//          .intoPartial[User]
-//          .withFieldComputedPartial(_.age, p => PartialTransformer.Result.fromValue(p.age * 3))
-//          .transform
-//        val expected = User("John", 30, 140)
-//
-//        result.asOption ==> Some(expected)
-//        result.asEither ==> Right(expected)
-//        result.asErrorPathMessagesStrings ==> Seq.empty
-//      }
+      "field partial const override" - {
+        val result = Person("John", 10, 140)
+          .intoPartial[User]
+          .withFieldConstPartial(_.age, PartialTransformer.Result.fromValue(20))
+          .transform
+        val expected = User("John", 20, 140)
+
+        result.asOption ==> Some(expected)
+        result.asEither ==> Right(expected)
+        result.asErrorPathMessagesStrings ==> Seq.empty
+      }
+
+      "field compute" - {
+        val result = Person("John", 10, 140)
+          .intoPartial[User]
+          .withFieldComputed(_.age, _.age * 3)
+          .transform
+        val expected = User("John", 30, 140)
+
+        result.asOption ==> Some(expected)
+        result.asEither ==> Right(expected)
+        result.asErrorPathMessagesStrings ==> Seq.empty
+      }
+
+      "field compute partial" - {
+        val result = Person("John", 10, 140)
+          .intoPartial[User]
+          .withFieldComputedPartial(_.age, p => PartialTransformer.Result.fromValue(p.age * 3))
+          .transform
+        val expected = User("John", 30, 140)
+
+        result.asOption ==> Some(expected)
+        result.asEither ==> Right(expected)
+        result.asErrorPathMessagesStrings ==> Seq.empty
+      }
     }
 
 //    "transform always fails" - {
