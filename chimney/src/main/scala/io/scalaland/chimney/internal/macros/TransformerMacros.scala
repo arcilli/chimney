@@ -842,7 +842,7 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
             deriveTransformerTree(srcPrefixTree, config)(From, To)
               .map(tree => TransformerBodyTree(tree, config.derivationTarget))
         }
-      case pt@DerivationTarget.PartialTransformer(_) =>
+      case pt @ DerivationTarget.PartialTransformer(_) =>
         val implicitPartialTransformer = resolveImplicitTransformer(config)(From, To)
         val implicitTransformer = findLocalImplicitTransformer(From, To, DerivationTarget.TotalTransformer)
 
@@ -937,10 +937,13 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
   private def isDeriving(tree: Tree): Boolean = {
     tree match {
       case TypeApply(Select(qualifier, name), _) =>
-        qualifier.tpe =:= weakTypeOf[io.scalaland.chimney.Transformer.type] && name.toString == "derive"
+        (qualifier.tpe =:= weakTypeOf[io.scalaland.chimney.Transformer.type] ||
+          qualifier.tpe =:= weakTypeOf[io.scalaland.chimney.PartialTransformer.type]) &&
+          name.toString == "derive"
       case Apply(TypeApply(Select(qualifier, name), _), _) =>
         qualifier.tpe =:= weakTypeOf[io.scalaland.chimney.TransformerF.type] && name.toString == "derive"
-      case _ => false
+      case _ =>
+        false
     }
   }
 
