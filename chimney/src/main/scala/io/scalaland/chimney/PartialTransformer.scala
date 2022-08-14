@@ -228,6 +228,7 @@ object PartialTransformer {
     def asString: String = this match {
       case ErrorPath.Empty                  => ""
       case ErrorPath.Accessor(name, ErrorPath.Empty) => s"$name"
+      case ErrorPath.Accessor(name, idx: ErrorPath.Index) => s"$name${idx.asString}"
       case ErrorPath.Accessor(name, nested) => s"$name.${nested.asString}"
       case ErrorPath.Index(index, nested)   => s"($index).${nested.asString}"
       case ErrorPath.MapValue(key, nested)  => s"($key).${nested.asString}"

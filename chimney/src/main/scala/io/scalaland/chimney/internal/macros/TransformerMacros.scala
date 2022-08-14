@@ -498,10 +498,10 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
         case TransformerBodyTree(innerTransformerTree, pt @ DerivationTarget.PartialTransformer(_)) =>
           val idx = Ident(freshTermName("idx"))
           q"""
-            _root_.io.scalaland.chimney.PartialTransformer.Result.traverse[$To, $FromInnerT, $ToInnerT](
+            _root_.io.scalaland.chimney.PartialTransformer.Result.traverse[$To, ($FromInnerT, _root_.scala.Int), $ToInnerT](
               $srcPrefixTree.iterator.zipWithIndex,
               { case (${fn.name}: $FromInnerT, ${idx.name}: _root_.scala.Int) =>
-                $innerTransformerTree.wrapErrorPath(PartialTransformer.ErrorPath.Index($idx, _))
+                $innerTransformerTree.wrapErrorPaths(PartialTransformer.ErrorPath.Index($idx, _))
               },
               ${pt.failFastTree}
             )
