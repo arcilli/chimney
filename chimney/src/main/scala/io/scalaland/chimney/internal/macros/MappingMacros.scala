@@ -100,6 +100,20 @@ trait MappingMacros extends Model with TypeTestUtils with DslMacroUtils {
               config.derivationTarget
             )
           }
+        case FieldOverride.Computed if config.derivationTarget.isInstanceOf[DerivationTarget.PartialTransformer] =>
+          val function = config.transformerDefinitionPrefix.accessOverriddenComputedFunction(target.name, From, target.tpe)
+          val liftedFunction = q"_root_.io.scalaland.chimney.PartialTransformer.Result.fromFunction($function)"
+          Some {
+            target -> TransformerBodyTree(
+              q"""
+                ${liftedFunction.callUnaryApply(srcPrefixTree)}
+                  .wrapErrorPaths(
+                    _root_.io.scalaland.chimney.PartialTransformer.ErrorPath.Accessor(${target.name}, _)
+                  )
+              """,
+              config.derivationTarget
+            )
+          }
         case FieldOverride.Computed =>
           Some {
             target -> TransformerBodyTree(

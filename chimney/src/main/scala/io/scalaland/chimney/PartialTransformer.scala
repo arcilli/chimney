@@ -166,7 +166,6 @@ object PartialTransformer {
         implicit fac: Factory[B, M]
     ): Result[M] = {
       val b = fac.newBuilder
-
       if (failFast) {
         var errors: Vector[Error] = null
         while (errors == null && it.hasNext) {
@@ -178,7 +177,7 @@ object PartialTransformer {
         if (errors == null) Result.Value(b.result()) else Result.Errors(errors)
       } else {
         var allErrors: Vector[Error] = Vector.empty
-        while (allErrors.isEmpty && it.hasNext) {
+        while (it.hasNext) {
           f(it.next()) match {
             case Value(value) => b += value
             case Errors(ee)   => allErrors ++= ee

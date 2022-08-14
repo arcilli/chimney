@@ -156,72 +156,59 @@ object PartialDslSpec extends TestSuite {
         )
       }
     }
-//
-//    "partial transform validation" - {
-//
-//      "success" - {
-//        val okForm = PersonForm("John", "10", "140")
-//        val expected = Person("JOHN", 10, 140)
-//
-//        val result = okForm
-//          .intoPartial[Person]
-//          .withFieldComputedPartial(
-//            _.name,
-//            pf =>
-//              if (pf.name.isEmpty) PartialTransformer.Result.fromEmpty
-//              else PartialTransformer.Result.fromValue(pf.name.toUpperCase())
-//          )
-//          .withFieldComputed(_.age, _.age.toInt) // must catch exceptions
-//          .withFieldComputedPartial(
-//            _.height,
-//            pf => PartialTransformer.Result.fromOption(pf.height.parseDouble)
-//          )
-//          .transform
-//
-//        result.asOption ==> Some(expected)
-//        result.asEither ==> Right(expected)
-//        result.asErrorPathMessagesStrings ==> Seq.empty
-//      }
-//
-//      "failure with error handling" - {
-//        val invalidForm = PersonForm("", "foo", "bar")
-//
-//        val result = invalidForm
-//          .intoPartial[Person]
-//          .withFieldComputedPartial(
-//            _.name,
-//            pf =>
-//              if (pf.name.isEmpty) PartialTransformer.Result.fromEmpty
-//              else PartialTransformer.Result.fromValue(pf.name.toUpperCase())
-//          )
-//          .withFieldComputed(_.age, _.age.toInt) // must catch exceptions
-//          .withFieldComputedPartial(
-//            _.height,
-//            pf => PartialTransformer.Result.fromOption(pf.height.parseDouble)
-//          )
-//          .transform
-//
-//        result.asOption ==> None
-//        result.asEither ==> Left(
-//          PartialTransformer.Result.Errors(
-//            Seq(
-//              PartialTransformer.Error.ofEmptyValue
-//                .wrapErrorPath(PartialTransformer.ErrorPath.Accessor("height", _)),
-//              PartialTransformer.Error
-//                .ofThrowable(new NumberFormatException("For input string: \"foo\""))
-//                .wrapErrorPath(PartialTransformer.ErrorPath.Accessor("height", _)),
-//              PartialTransformer.Error.ofEmptyValue
-//                .wrapErrorPath(PartialTransformer.ErrorPath.Accessor("height", _))
-//            )
-//          )
-//        )
-//        result.asErrorPathMessagesStrings ==> Seq(
-//          "name" -> "empty value",
-//          "age" -> "java.lang.NumberFormatException: For input string: \"foo\"",
-//          "height" -> "empty value"
-//        )
-//      }
-//    }
+
+    "partial transform validation" - {
+
+      "success" - {
+        val okForm = PersonForm("John", "10", "140")
+        val expected = Person("JOHN", 10, 140)
+
+        val result = okForm
+          .intoPartial[Person]
+          .withFieldComputedPartial(
+            _.name,
+            pf =>
+              if (pf.name.isEmpty) PartialTransformer.Result.fromEmpty
+              else PartialTransformer.Result.fromValue(pf.name.toUpperCase())
+          )
+          .withFieldComputed(_.age, _.age.toInt) // must catch exceptions
+          .withFieldComputedPartial(
+            _.height,
+            pf => PartialTransformer.Result.fromOption(pf.height.parseDouble)
+          )
+          .transform
+
+        result.asOption ==> Some(expected)
+        result.asEither ==> Right(expected)
+        result.asErrorPathMessagesStrings ==> Vector.empty
+      }
+
+      "failure with error handling" - {
+        val invalidForm = PersonForm("", "foo", "bar")
+
+        val result = invalidForm
+          .intoPartial[Person]
+          .withFieldComputedPartial(
+            _.name,
+            pf =>
+              if (pf.name.isEmpty) PartialTransformer.Result.fromEmpty
+              else PartialTransformer.Result.fromValue(pf.name.toUpperCase())
+          )
+          .withFieldComputed(_.age, _.age.toInt) // must catch exceptions
+          .withFieldComputedPartial(
+            _.height,
+            pf => PartialTransformer.Result.fromOption(pf.height.parseDouble)
+          )
+          .transform
+
+        result.asOption ==> None
+        result.asErrorPathMessagesStrings ==> Vector(
+          "name" -> "empty value",
+          "age" -> "For input string: \"foo\"",
+          "height" -> "empty value"
+        )
+      }
+    }
 //
 //    "recursive partial transform with nested validation" - {
 //
