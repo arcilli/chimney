@@ -76,7 +76,7 @@ class TransformerBlackboxMacros(val c: blackbox.Context) extends TransformerMacr
       InstanceFlags: WeakTypeTag,
       ScopeFlags: WeakTypeTag
   ](@unused tc: c.Tree): c.Expr[To] = {
-    c.Expr[To](q"${c.prefix}.transform(failFast = false)")
+    c.Expr[To](q"${c.prefix}.transform(false)")
   }
 
   def partialTransformImpl[
