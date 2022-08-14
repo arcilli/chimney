@@ -840,6 +840,42 @@ trait TransformerMacros extends MappingMacros with TargetConstructorMacros with 
             deriveTransformerTree(srcPrefixTree, config)(From, To)
               .map(tree => TransformerBodyTree(tree, config.derivationTarget))
         }
+      case pt@DerivationTarget.PartialTransformer(_) =>
+        val implicitPartialTransformer = resolveImplicitTransformer(config)(From, To)
+        val implicitTransformer = findLocalImplicitTransformer(From, To, DerivationTarget.TotalTransformer)
+
+
+        (implicitPartialTransformer, implicitTransformer) match {
+          case (Some(localImplicitTreePartial), Some(localImplicitTree)) =>
+            // TODO: manage ambiguity with DSL flag
+            c.abort(
+              c.enclosingPosition,
+              s"""Ambiguous implicits while resolving Chimney recursive transformation:
+                 |
+                 |PartialTransformer[$From, $To]: $localImplicitTreePartial
+                 |Transformer[$From, $To]: $localImplicitTree
+                 |
+                 |Please eliminate ambiguity from implicit scope or use withFieldComputed/withFieldComputedF to decide which one should be used
+                 |""".stripMargin
+            )
+          case (Some(localImplicitTreePartial), None) =>
+            Right(
+              TransformerBodyTree(
+                localImplicitTreePartial.callPartialTransform(srcPrefixTree, pt.failFastTree),
+                config.derivationTarget
+              )
+            )
+          case (None, Some(localImplicitTree)) =>
+            Right(
+              TransformerBodyTree(
+                localImplicitTree.callTransform(srcPrefixTree),
+                DerivationTarget.TotalTransformer
+              )
+            )
+          case (None, None) =>
+            deriveTransformerTree(srcPrefixTree, config)(From, To)
+              .map(tree => TransformerBodyTree(tree, config.derivationTarget))
+        }
       case DerivationTarget.TotalTransformer =>
         expandTransformerTree(srcPrefixTree, config)(From, To)
           .map(tree => TransformerBodyTree(tree, config.derivationTarget))
