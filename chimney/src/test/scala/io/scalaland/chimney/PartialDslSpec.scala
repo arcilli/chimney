@@ -7,6 +7,7 @@ import io.scalaland.chimney.utils.EitherUtils._
 import io.scalaland.chimney.utils.OptionUtils._
 import utest._
 
+import scala.annotation.unused
 import scala.collection.immutable.Queue
 import scala.collection.mutable.ArrayBuffer
 
@@ -271,382 +272,386 @@ object PartialDslSpec extends TestSuite {
         )
       }
     }
-//
-//    "partial subtype transform" - {
-//      class Foo(val x: Int)
-//      case class Bar(override val x: Int) extends Foo(x)
-//
-//      val result = Bar(100).transformIntoPartial[Foo]
-//
-//      result.asOption.map(_.x) ==> Some(100)
-//      result.asEither.map(_.x) ==> Right(100)
-//      result.asErrorPathMessagesStrings ==> Seq.empty
-//    }
-//
-//    "partial value class transform" - {
-//
-//      "from value class" - {
-//        val result = addressbook.Email("abc@def.com").transformIntoPartial[String]
-//
-//        result.asOption ==> Some("abc@def.com")
-//        result.asEither ==> Right("abc@def.com")
-//        result.asErrorPathMessagesStrings ==> Seq.empty
-//      }
-//
-//      "to value class" - {
-//
-//        val result = "abc@def.com".transformIntoPartial[addressbook.Email]
-//
-//        result.asOption ==> Some(addressbook.Email("abc@def.com"))
-//        result.asEither ==> Right(addressbook.Email("abc@def.com"))
-//        result.asErrorPathMessagesStrings ==> Seq.empty
-//      }
-//    }
-//
-//    "partial option transform" - {
-//
-//      "total inner transform" - {
-//
-//        implicit val intPrinter: Transformer[Int, String] = _.toString
-//
-//        "Option[T] to Option[U]" - {
-//
-//          "optional value" - {
-//            val result = Option(123).transformIntoPartial[Option[String]]
-//
-//            result.asOption ==> Some(Some("123"))
-//            result.asEither ==> Right(Some("123"))
-//            result.asErrorPathMessagesStrings ==> Seq.empty
-//          }
-//
-//          "empty option" - {
-//            val result = Option.empty[Int].transformIntoPartial[Option[String]]
-//
-//            result.asOption ==> Some(None)
-//            result.asEither ==> Right(None)
-//            result.asErrorPathMessagesStrings ==> Seq.empty
-//          }
-//        }
-//
-//        "T to Option[U]" - {
-//
-//          "value case" - {
-//            val result = 10.transformIntoPartial[Option[String]]
-//
-//            result.asOption ==> Some(Some("10"))
-//            result.asEither ==> Right(Some("10"))
-//            result.asErrorPathMessagesStrings ==> Seq.empty
-//          }
-//
-//          "null case" - {
-//            val result = (null: Integer).transformIntoPartial[Option[String]]
-//
-//            result.asOption ==> Some(None)
-//            result.asEither ==> Right(None)
-//            result.asErrorPathMessagesStrings ==> Seq.empty
-//          }
-//        }
-//      }
-//
-//      "partial inner transform" - {
-//
-//        implicit val intPartialParser: PartialTransformer[String, Int] =
-//          PartialTransformer(_.parseInt.toPartialTransformerResultOrString("bad int"))
-//
-//        "Option[T] to Option[U]" - {
-//          "success case" - {
-//            val result = Option("123").transformIntoPartial[Option[Int]]
-//
-//            result.asOption ==> Some(Some(123))
-//            result.asEither ==> Right(Some(123))
-//            result.asErrorPathMessagesStrings ==> Seq.empty
-//          }
-//
-//          "failure case" - {
-//            val result = Option("abc").transformIntoPartial[Option[Int]]
-//
-//            result.asOption ==> None
-//            result.asEither ==> Left(
-//              PartialTransformer.Result.Errors.fromString("bad int")
-//            )
-//            result.asErrorPathMessagesStrings ==> Seq(
-//              "" -> "bad int"
-//            )
-//          }
-//
-//          "empty case" - {
-//            val result = Option.empty[String].transformIntoPartial[Option[Int]]
-//
-//            result.asOption ==> Some(None)
-//            result.asEither ==> Right(None)
-//            result.asErrorPathMessagesStrings ==> Seq.empty
-//          }
-//        }
-//
-//        "T to Option[U]" - {
-//          "success case" - {
-//            val result = "123".transformIntoPartial[Option[Int]]
-//
-//            result.asOption ==> Some(Some(123))
-//            result.asEither ==> Right(Some(123))
-//            result.asErrorPathMessagesStrings ==> Seq.empty
-//          }
-//
-//          "failure case" - {
-//            val result = "abc".transformIntoPartial[Option[Int]]
-//
-//            result.asOption ==> None
-//            result.asEither ==> Left(
-//              PartialTransformer.Result.Errors.fromString("bad int")
-//            )
-//            result.asErrorPathMessagesStrings ==> Seq(
-//              "" -> "bad int"
-//            )
-//          }
-//
-//          "null case" - {
-//            val result = (null: String).transformIntoPartial[Option[Int]]
-//
-//            result.asOption ==> Some(None)
-//            result.asEither ==> Right(None)
-//            result.asErrorPathMessagesStrings ==> Seq.empty
-//          }
-//        }
-//      }
-//    }
-//
-//    "partial .enableUnsafeOption" - {
-//
-//      "not supported for any case" - {
-//
-//        implicit val intPrinter: Transformer[Int, String] = _.toString
-//
-//        implicit val intPartialParser: PartialTransformer[String, Int] =
-//          PartialTransformer(_.parseInt.toPartialTransformerResultOrString("bad int"))
-//
-//        compileError("Option(10).intoPartially[String].enableUnsafeOption.transform")
-//          .check("", "not supported")
-//        compileError("Option.empty[Int].intoPartially[String].enableUnsafeOption.transform")
-//          .check("", "not supported")
-//        compileError("""Option("x").intoPartially[Int].enableUnsafeOption.transform""")
-//          .check("", "not supported")
-//        compileError("""Option.empty[String].intoPartially[Int].enableUnsafeOption.transform""")
-//          .check("", "not supported")
-//      }
-//    }
-//
-//    "safe option unwrapping" - {
-//      implicit val intParserEither: PartialTransformer[String, Int] =
-//        PartialTransformer(
-//          _.parseInt.toEitherList("bad int").toPartialTransformerResult
-//        )
-//
-//      implicit def optionUnwrapping[A, B](
-//          implicit underlying: PartialTransformer[A, B]
-//      ): PartialTransformer[Option[A], B] = PartialTransformer {
-//        case Some(value) => underlying.transform(value)
-//        case None        => PartialTransformer.Result.fromErrorString("Expected a value, got none")
-//      }
-//
-//      // Raw domain
-//      case class RawData(id: Option[String], inner: Option[RawInner])
-//
-//      case class RawInner(id: Option[Int], str: Option[String])
-//
-//      // Domain
-//      case class Data(id: Int, inner: Inner)
-//
-//      case class Inner(id: Int, str: String)
-//
-//      RawData(Some("1"), Some(RawInner(Some(2), Some("str"))))
-//        .transformIntoPartial[Data]
-//        .asEither ==> Right(
-//        Data(1, Inner(2, "str"))
-//      )
-//
-//      RawData(Some("a"), Some(RawInner(None, None)))
-//        .transformIntoPartial[Data]
-//        .asErrorPathMessagesStrings ==> Seq(
-//        "id" -> "bad int",
-//        "inner.id" -> "Expected a value, got none",
-//        "inner.str" -> "Expected a value, got none"
-//      )
-//    }
-//
-//    "partial either transform" - {
-//
-//      "total inner transform" - {
-//        implicit val intPrinter: Transformer[Int, String] = _.toString
-//
-//        (Left(1): Either[Int, Int]).transformIntoPartial[Either[String, String]].asOption ==> Some(Left("1"))
-//        (Right(1): Either[Int, Int]).transformIntoPartial[Either[String, String]].asOption ==> Some(Right("1"))
-//        Left(1).transformIntoPartial[Either[String, String]].asOption ==> Some(Left("1"))
-//        Right(1).transformIntoPartial[Either[String, String]].asOption ==> Some(Right("1"))
-//        Left(1).transformIntoPartial[Left[String, String]].asOption ==> Some(Left("1"))
-//        Right(1).transformIntoPartial[Right[String, String]].asOption ==> Some(Right("1"))
-//      }
-//
-//      "partial inner transform" - {
-//        implicit val intParserOpt: PartialTransformer[String, Int] =
-//          PartialTransformer(_.parseInt.toPartialTransformerResult)
-//
-//        (Left("1"): Either[String, String]).transformIntoPartial[Either[Int, Int]].asOption ==> Some(Left(1))
-//        (Right("1"): Either[String, String]).transformIntoPartial[Either[Int, Int]].asOption ==> Some(Right(1))
-//        Left("1").transformIntoPartial[Either[Int, Int]].asOption ==> Some(Left(1))
-//        Right("1").transformIntoPartial[Either[Int, Int]].asOption ==> Some(Right(1))
-//        Left("1").transformIntoPartial[Left[Int, Int]].asOption ==> Some(Left(1))
-//        Right("1").transformIntoPartial[Right[Int, Int]].asOption ==> Some(Right(1))
-//
-//        (Left("x"): Either[String, String]).transformIntoPartial[Either[Int, Int]].asOption ==> None
-//        (Right("x"): Either[String, String]).transformIntoPartial[Either[Int, Int]].asOption ==> None
-//        Left("x").transformIntoPartial[Either[Int, Int]].asOption ==> None
-//        Right("x").transformIntoPartial[Either[Int, Int]].asOption ==> None
-//        Left("x").transformIntoPartial[Left[Int, Int]].asOption ==> None
-//        Right("x").transformIntoPartial[Right[Int, Int]].asOption ==> None
-//      }
-//    }
-//
-//    "partial collection transform" - {
-//
-//      "total inner transform" - {
-//        implicit val intPrinter: Transformer[Int, String] = _.toString
-//
-//        List(123, 456).transformIntoPartial[List[String]].asOption ==> Some(List("123", "456"))
-//        Vector(123, 456).transformIntoPartial[Queue[String]].asOption ==> Some(Queue("123", "456"))
-//        Array.empty[Int].transformIntoPartial[Seq[String]].asOption ==> Some(Seq.empty[String])
-//      }
-//
-//      "partial inner transform" - {
-//        implicit val intParserOpt: PartialTransformer[String, Int] =
-//          PartialTransformer(_.parseInt.toPartialTransformerResult)
-//
-//        List("123", "456").transformIntoPartial[List[Int]].asOption ==> Some(List(123, 456))
-//        Vector("123", "456").transformIntoPartial[Queue[Int]].asOption ==> Some(Queue(123, 456))
-//        Array.empty[String].transformIntoPartial[Seq[Int]].asOption ==> Some(Seq.empty[Int])
-//        Set("123", "456").transformIntoPartial[Array[Int]].asOption.get.sorted ==> Array(123, 456)
-//
-//        List("abc", "456").transformIntoPartial[List[Int]].asOption ==> None
-//        Vector("123", "def").transformIntoPartial[Queue[Int]].asOption ==> None
-//        Array("abc", "def").transformIntoPartial[Seq[Int]].asOption ==> None
-//        Set("123", "xyz").transformIntoPartial[Array[Int]].asOption ==> None
-//      }
-//    }
-//
-//    "partial map transform" - {
-//
-//      "total inner transform" - {
-//        implicit val intPrinter: Transformer[Int, String] = _.toString
-//
-//        Map(1 -> 10, 2 -> 20).transformIntoPartial[Map[String, String]].asOption ==> Some(Map("1" -> "10", "2" -> "20"))
-//        Map(1 -> 10, 2 -> 20).transformIntoPartial[Map[String, Int]].asOption ==> Some(Map("1" -> 10, "2" -> 20))
-//        Seq(1 -> 10, 2 -> 20).transformIntoPartial[Map[String, String]].asOption ==> Some(Map("1" -> "10", "2" -> "20"))
-//        ArrayBuffer(1 -> 10, 2 -> 20).transformIntoPartial[Map[Int, String]].asOption ==> Some(
-//          Map(1 -> "10", 2 -> "20")
-//        )
-//        Map(1 -> 10, 2 -> 20).transformIntoPartial[List[(String, String)]].asOption ==> Some(
-//          List("1" -> "10", "2" -> "20")
-//        )
-//        Map(1 -> 10, 2 -> 20).transformIntoPartial[Vector[(String, Int)]].asOption ==> Some(
-//          Vector("1" -> 10, "2" -> 20)
-//        )
-//        Array(1 -> 10, 2 -> 20).transformIntoPartial[Map[String, String]].asOption ==> Some(
-//          Map("1" -> "10", "2" -> "20")
-//        )
-//        Array(1 -> 10, 2 -> 20).transformIntoPartial[Map[Int, String]].asOption ==> Some(Map(1 -> "10", 2 -> "20"))
-//        Map(1 -> 10, 2 -> 20).transformIntoPartial[Array[(String, String)]].asOption.get ==> Array(
-//          "1" -> "10",
-//          "2" -> "20"
-//        )
-//        Map(1 -> 10, 2 -> 20).transformIntoPartial[Array[(String, Int)]].asOption.get ==> Array("1" -> 10, "2" -> 20)
-//      }
-//
-//      "partial inner transform" - {
-//        implicit val intParserOpt: PartialTransformer[String, Int] =
-//          PartialTransformer(_.parseInt.toPartialTransformerResult)
-//
-//        Map("1" -> "10", "2" -> "20").transformIntoPartial[Map[Int, Int]].asOption ==> Some(Map(1 -> 10, 2 -> 20))
-//        Map("1" -> "10", "2" -> "20").transformIntoPartial[Map[Int, String]].asOption ==> Some(
-//          Map(1 -> "10", 2 -> "20")
-//        )
-//        Seq("1" -> "10", "2" -> "20").transformIntoPartial[Map[Int, Int]].asOption ==> Some(Map(1 -> 10, 2 -> 20))
-//        ArrayBuffer("1" -> "10", "2" -> "20").transformIntoPartial[Map[String, Int]].asOption ==>
-//          Some(Map("1" -> 10, "2" -> 20))
-//        Map("1" -> "10", "2" -> "20").transformIntoPartial[List[(Int, Int)]].asOption ==> Some(List(1 -> 10, 2 -> 20))
-//        Map("1" -> "10", "2" -> "20").transformIntoPartial[Vector[(Int, String)]].asOption ==>
-//          Some(Vector(1 -> "10", 2 -> "20"))
-//        Array("1" -> "10", "2" -> "20").transformIntoPartial[Map[Int, Int]].asOption ==> Some(Map(1 -> 10, 2 -> 20))
-//        Array("1" -> "10", "2" -> "20").transformIntoPartial[Map[String, Int]].asOption ==> Some(
-//          Map("1" -> 10, "2" -> 20)
-//        )
-//        Map("1" -> "10", "2" -> "20").transformIntoPartial[Array[(Int, Int)]].asOption.get ==> Array(1 -> 10, 2 -> 20)
-//        Map("1" -> "10", "2" -> "20").transformIntoPartial[Array[(Int, String)]].asOption.get ==> Array(
-//          1 -> "10",
-//          2 -> "20"
-//        )
-//
-//        Map("1" -> "x", "y" -> "20").transformIntoPartial[Map[Int, Int]].asOption ==> None
-//        Map("x" -> "10", "2" -> "20").transformIntoPartial[Map[Int, String]].asOption ==> None
-//        Seq("1" -> "10", "2" -> "x").transformIntoPartial[Map[Int, Int]].asOption ==> None
-//        ArrayBuffer("1" -> "x", "2" -> "y").transformIntoPartial[Map[String, Int]].asOption ==> None
-//        Map("x" -> "10", "y" -> "z").transformIntoPartial[List[(Int, Int)]].asOption ==> None
-//        Map("1" -> "10", "x" -> "20").transformIntoPartial[Vector[(Int, String)]].asOption ==> None
-//        Array("x" -> "y", "z" -> "v").transformIntoPartial[Map[Int, Int]].asOption ==> None
-//        Array("1" -> "x", "2" -> "y").transformIntoPartial[Map[String, Int]].asOption ==> None
-//        Map("1" -> "10", "x" -> "20").transformIntoPartial[Array[(Int, Int)]].asOption ==> None
-//        Map("x" -> "10", "y" -> "20").transformIntoPartial[Array[(Int, String)]].asOption ==> None
-//      }
-//    }
-//
-//    "partial sealed families" - {
-//      import numbers._
-//
-//      "total inner transform" - {
-//        implicit val intPrinter: Transformer[Int, String] = _.toString
-//        import ScalesPartialTransformer.shortToLongTotalInner
-//
-//        (short.Zero: short.NumScale[Int, Nothing])
-//          .transformIntoPartial[long.NumScale[String]]
-//          .asOption ==> Some(long.Zero)
-//        (short.Million(4): short.NumScale[Int, Nothing])
-//          .transformIntoPartial[long.NumScale[String]]
-//          .asOption ==> Some(long.Million("4"))
-//        (short.Billion(2): short.NumScale[Int, Nothing])
-//          .transformIntoPartial[long.NumScale[String]]
-//          .asOption ==> Some(long.Milliard("2"))
-//        (short.Trillion(100): short.NumScale[Int, Nothing])
-//          .transformIntoPartial[long.NumScale[String]]
-//          .asOption ==> Some(long.Billion("100"))
-//      }
-//
-//      "partial inner transform" - {
-//        implicit val intParserOpt: PartialTransformer[String, Int] =
-//          PartialTransformer(_.parseInt.toPartialTransformerResult)
-//        import ScalesPartialTransformer.shortToLongPartialInner
-//
-//        (short.Zero: short.NumScale[String, Nothing])
-//          .transformIntoPartial[long.NumScale[Int]]
-//          .asOption ==> Some(long.Zero)
-//        (short.Million("4"): short.NumScale[String, Nothing])
-//          .transformIntoPartial[long.NumScale[Int]]
-//          .asOption ==> Some(long.Million(4))
-//        (short.Billion("2"): short.NumScale[String, Nothing])
-//          .transformIntoPartial[long.NumScale[Int]]
-//          .asOption ==> Some(long.Milliard(2))
-//        (short.Trillion("100"): short.NumScale[String, Nothing])
-//          .transformIntoPartial[long.NumScale[Int]]
-//          .asOption ==> Some(long.Billion(100))
-//
-//        (short.Million("x"): short.NumScale[String, Nothing])
-//          .transformIntoPartial[long.NumScale[Int]]
-//          .asOption ==> None
-//        (short.Billion("x"): short.NumScale[String, Nothing])
-//          .transformIntoPartial[long.NumScale[Int]]
-//          .asOption ==> None
-//        (short.Trillion("x"): short.NumScale[String, Nothing])
-//          .transformIntoPartial[long.NumScale[Int]]
-//          .asOption ==> None
-//      }
-//    }
+
+    "partial subtype transform" - {
+      class Foo(val x: Int)
+      case class Bar(override val x: Int) extends Foo(x)
+
+      val result = Bar(100).transformIntoPartial[Foo]
+
+      result.asOption.map(_.x) ==> Some(100)
+      result.asEither.map(_.x) ==> Right(100)
+      result.asErrorPathMessagesStrings ==> Vector.empty
+    }
+
+    "partial value class transform" - {
+
+      "from value class" - {
+        val result = addressbook.Email("abc@def.com").transformIntoPartial[String]
+
+        result.asOption ==> Some("abc@def.com")
+        result.asEither ==> Right("abc@def.com")
+        result.asErrorPathMessagesStrings ==> Vector.empty
+      }
+
+      "to value class" - {
+
+        val result = "abc@def.com".transformIntoPartial[addressbook.Email]
+
+        result.asOption ==> Some(addressbook.Email("abc@def.com"))
+        result.asEither ==> Right(addressbook.Email("abc@def.com"))
+        result.asErrorPathMessagesStrings ==> Vector.empty
+      }
+    }
+
+    "partial option transform" - {
+
+      "total inner transform" - {
+
+        implicit val intPrinter: Transformer[Int, String] = _.toString
+
+        "Option[T] to Option[U]" - {
+
+          "optional value" - {
+            val result = Option(123).transformIntoPartial[Option[String]]
+
+            result.asOption ==> Some(Some("123"))
+            result.asEither ==> Right(Some("123"))
+            result.asErrorPathMessagesStrings ==> Vector.empty
+          }
+
+          "empty option" - {
+            val result = Option.empty[Int].transformIntoPartial[Option[String]]
+
+            result.asOption ==> Some(None)
+            result.asEither ==> Right(None)
+            result.asErrorPathMessagesStrings ==> Vector.empty
+          }
+        }
+
+        "T to Option[U]" - {
+
+          "value case" - {
+            val result = 10.transformIntoPartial[Option[String]]
+
+            result.asOption ==> Some(Some("10"))
+            result.asEither ==> Right(Some("10"))
+            result.asErrorPathMessagesStrings ==> Vector.empty
+          }
+
+          "null case" - {
+            implicit val integerPrinter: Transformer[Integer, String] = _.toString
+
+            val result = (null: Integer).transformIntoPartial[Option[String]]
+
+            result.asOption ==> Some(None)
+            result.asEither ==> Right(None)
+            result.asErrorPathMessagesStrings ==> Vector.empty
+          }
+        }
+      }
+
+      "partial inner transform" - {
+
+        implicit val intPartialParser: PartialTransformer[String, Int] =
+          PartialTransformer(_.parseInt.toPartialTransformerResultOrString("bad int"))
+
+        "Option[T] to Option[U]" - {
+          "success case" - {
+            val result = Option("123").transformIntoPartial[Option[Int]]
+
+            result.asOption ==> Some(Some(123))
+            result.asEither ==> Right(Some(123))
+            result.asErrorPathMessagesStrings ==> Vector.empty
+          }
+
+          "failure case" - {
+            val result = Option("abc").transformIntoPartial[Option[Int]]
+
+            result.asOption ==> None
+            result.asEither ==> Left(
+              PartialTransformer.Result.Errors.fromString("bad int")
+            )
+            result.asErrorPathMessagesStrings ==> Vector(
+              "" -> "bad int"
+            )
+          }
+
+          "empty case" - {
+            val result = Option.empty[String].transformIntoPartial[Option[Int]]
+
+            result.asOption ==> Some(None)
+            result.asEither ==> Right(None)
+            result.asErrorPathMessagesStrings ==> Seq.empty
+          }
+        }
+
+        "T to Option[U]" - {
+          "success case" - {
+            val result = "123".transformIntoPartial[Option[Int]]
+
+            result.asOption ==> Some(Some(123))
+            result.asEither ==> Right(Some(123))
+            result.asErrorPathMessagesStrings ==> Vector.empty
+          }
+
+          "failure case" - {
+            val result = "abc".transformIntoPartial[Option[Int]]
+
+            result.asOption ==> None
+            result.asEither ==> Left(
+              PartialTransformer.Result.Errors.fromString("bad int")
+            )
+            result.asErrorPathMessagesStrings ==> Vector(
+              "" -> "bad int"
+            )
+          }
+
+          "null case" - {
+            val result = (null: String).transformIntoPartial[Option[Int]]
+
+            result.asOption ==> Some(None)
+            result.asEither ==> Right(None)
+            result.asErrorPathMessagesStrings ==> Vector.empty
+          }
+        }
+      }
+    }
+
+    "partial .enableUnsafeOption" - {
+
+      "not supported for any case" - {
+
+        @unused implicit val intPrinter: Transformer[Int, String] = _.toString
+
+        @unused implicit val intPartialParser: PartialTransformer[String, Int] =
+          PartialTransformer(_.parseInt.toPartialTransformerResultOrString("bad int"))
+
+        compileError("Option(10).intoPartial[String].enableUnsafeOption.transform")
+          .check("", "not supported")
+        compileError("Option.empty[Int].intoPartial[String].enableUnsafeOption.transform")
+          .check("", "not supported")
+        compileError("""Option("x").intoPartial[Int].enableUnsafeOption.transform""")
+          .check("", "not supported")
+        compileError("""Option.empty[String].intoPartial[Int].enableUnsafeOption.transform""")
+          .check("", "not supported")
+      }
+    }
+
+    "safe option unwrapping" - {
+      implicit val intParserEither: PartialTransformer[String, Int] =
+        PartialTransformer(
+          _.parseInt.toEitherList("bad int").toPartialTransformerResult
+        )
+
+      implicit def optionUnwrapping[A, B](
+          implicit underlying: PartialTransformer[A, B]
+      ): PartialTransformer[Option[A], B] = PartialTransformer {
+        case Some(value) => underlying.transform(value)
+        case None        => PartialTransformer.Result.fromErrorString("Expected a value, got none")
+      }
+
+      // Raw domain
+      case class RawData(id: Option[String], inner: Option[RawInner])
+
+      case class RawInner(id: Option[Int], str: Option[String])
+
+      // Domain
+      case class Data(id: Int, inner: Inner)
+
+      case class Inner(id: Int, str: String)
+
+      RawData(Some("1"), Some(RawInner(Some(2), Some("str"))))
+        .transformIntoPartial[Data]
+        .asEither ==> Right(
+        Data(1, Inner(2, "str"))
+      )
+
+      RawData(Some("a"), Some(RawInner(None, None)))
+        .transformIntoPartial[Data]
+        .asErrorPathMessagesStrings ==> Vector(
+        "id" -> "bad int",
+        "inner.id" -> "Expected a value, got none",
+        "inner.str" -> "Expected a value, got none"
+      )
+    }
+
+    "partial either transform" - {
+
+      "total inner transform" - {
+        implicit val intPrinter: Transformer[Int, String] = _.toString
+
+        (Left(1): Either[Int, Int]).transformIntoPartial[Either[String, String]].asOption ==> Some(Left("1"))
+        (Right(1): Either[Int, Int]).transformIntoPartial[Either[String, String]].asOption ==> Some(Right("1"))
+        Left(1).transformIntoPartial[Either[String, String]].asOption ==> Some(Left("1"))
+        Right(1).transformIntoPartial[Either[String, String]].asOption ==> Some(Right("1"))
+        Left(1).transformIntoPartial[Left[String, String]].asOption ==> Some(Left("1"))
+        Right(1).transformIntoPartial[Right[String, String]].asOption ==> Some(Right("1"))
+      }
+
+      "partial inner transform" - {
+        implicit val intParserOpt: PartialTransformer[String, Int] =
+          PartialTransformer(_.parseInt.toPartialTransformerResult)
+
+        (Left("1"): Either[String, String]).transformIntoPartial[Either[Int, Int]].asOption ==> Some(Left(1))
+        (Right("1"): Either[String, String]).transformIntoPartial[Either[Int, Int]].asOption ==> Some(Right(1))
+        Left("1").transformIntoPartial[Either[Int, Int]].asOption ==> Some(Left(1))
+        Right("1").transformIntoPartial[Either[Int, Int]].asOption ==> Some(Right(1))
+        Left("1").transformIntoPartial[Left[Int, Int]].asOption ==> Some(Left(1))
+        Right("1").transformIntoPartial[Right[Int, Int]].asOption ==> Some(Right(1))
+
+        (Left("x"): Either[String, String]).transformIntoPartial[Either[Int, Int]].asOption ==> None
+        (Right("x"): Either[String, String]).transformIntoPartial[Either[Int, Int]].asOption ==> None
+        Left("x").transformIntoPartial[Either[Int, Int]].asOption ==> None
+        Right("x").transformIntoPartial[Either[Int, Int]].asOption ==> None
+        Left("x").transformIntoPartial[Left[Int, Int]].asOption ==> None
+        Right("x").transformIntoPartial[Right[Int, Int]].asOption ==> None
+      }
+    }
+
+    "partial collection transform" - {
+
+      "total inner transform" - {
+        implicit val intPrinter: Transformer[Int, String] = _.toString
+
+        List(123, 456).transformIntoPartial[List[String]].asOption ==> Some(List("123", "456"))
+        Vector(123, 456).transformIntoPartial[Queue[String]].asOption ==> Some(Queue("123", "456"))
+        Array.empty[Int].transformIntoPartial[Seq[String]].asOption ==> Some(Seq.empty[String])
+      }
+
+      "partial inner transform" - {
+        implicit val intParserOpt: PartialTransformer[String, Int] =
+          PartialTransformer(_.parseInt.toPartialTransformerResult)
+
+        List("123", "456").transformIntoPartial[List[Int]].asOption ==> Some(List(123, 456))
+        Vector("123", "456").transformIntoPartial[Queue[Int]].asOption ==> Some(Queue(123, 456))
+        Array.empty[String].transformIntoPartial[Seq[Int]].asOption ==> Some(Seq.empty[Int])
+        Set("123", "456").transformIntoPartial[Array[Int]].asOption.get.sorted ==> Array(123, 456)
+
+        List("abc", "456").transformIntoPartial[List[Int]].asOption ==> None
+        Vector("123", "def").transformIntoPartial[Queue[Int]].asOption ==> None
+        Array("abc", "def").transformIntoPartial[Seq[Int]].asOption ==> None
+        Set("123", "xyz").transformIntoPartial[Array[Int]].asOption ==> None
+      }
+    }
+
+    "partial map transform" - {
+
+      "total inner transform" - {
+        implicit val intPrinter: Transformer[Int, String] = _.toString
+
+        Map(1 -> 10, 2 -> 20).transformIntoPartial[Map[String, String]].asOption ==> Some(Map("1" -> "10", "2" -> "20"))
+        Map(1 -> 10, 2 -> 20).transformIntoPartial[Map[String, Int]].asOption ==> Some(Map("1" -> 10, "2" -> 20))
+        Seq(1 -> 10, 2 -> 20).transformIntoPartial[Map[String, String]].asOption ==> Some(Map("1" -> "10", "2" -> "20"))
+        ArrayBuffer(1 -> 10, 2 -> 20).transformIntoPartial[Map[Int, String]].asOption ==> Some(
+          Map(1 -> "10", 2 -> "20")
+        )
+        Map(1 -> 10, 2 -> 20).transformIntoPartial[List[(String, String)]].asOption ==> Some(
+          List("1" -> "10", "2" -> "20")
+        )
+        Map(1 -> 10, 2 -> 20).transformIntoPartial[Vector[(String, Int)]].asOption ==> Some(
+          Vector("1" -> 10, "2" -> 20)
+        )
+        Array(1 -> 10, 2 -> 20).transformIntoPartial[Map[String, String]].asOption ==> Some(
+          Map("1" -> "10", "2" -> "20")
+        )
+        Array(1 -> 10, 2 -> 20).transformIntoPartial[Map[Int, String]].asOption ==> Some(Map(1 -> "10", 2 -> "20"))
+        Map(1 -> 10, 2 -> 20).transformIntoPartial[Array[(String, String)]].asOption.get ==> Array(
+          "1" -> "10",
+          "2" -> "20"
+        )
+        Map(1 -> 10, 2 -> 20).transformIntoPartial[Array[(String, Int)]].asOption.get ==> Array("1" -> 10, "2" -> 20)
+      }
+
+      "partial inner transform" - {
+        implicit val intParserOpt: PartialTransformer[String, Int] =
+          PartialTransformer(_.parseInt.toPartialTransformerResult)
+
+        Map("1" -> "10", "2" -> "20").transformIntoPartial[Map[Int, Int]].asOption ==> Some(Map(1 -> 10, 2 -> 20))
+        Map("1" -> "10", "2" -> "20").transformIntoPartial[Map[Int, String]].asOption ==> Some(
+          Map(1 -> "10", 2 -> "20")
+        )
+        Seq("1" -> "10", "2" -> "20").transformIntoPartial[Map[Int, Int]].asOption ==> Some(Map(1 -> 10, 2 -> 20))
+        ArrayBuffer("1" -> "10", "2" -> "20").transformIntoPartial[Map[String, Int]].asOption ==>
+          Some(Map("1" -> 10, "2" -> 20))
+        Map("1" -> "10", "2" -> "20").transformIntoPartial[List[(Int, Int)]].asOption ==> Some(List(1 -> 10, 2 -> 20))
+        Map("1" -> "10", "2" -> "20").transformIntoPartial[Vector[(Int, String)]].asOption ==>
+          Some(Vector(1 -> "10", 2 -> "20"))
+        Array("1" -> "10", "2" -> "20").transformIntoPartial[Map[Int, Int]].asOption ==> Some(Map(1 -> 10, 2 -> 20))
+        Array("1" -> "10", "2" -> "20").transformIntoPartial[Map[String, Int]].asOption ==> Some(
+          Map("1" -> 10, "2" -> 20)
+        )
+        Map("1" -> "10", "2" -> "20").transformIntoPartial[Array[(Int, Int)]].asOption.get ==> Array(1 -> 10, 2 -> 20)
+        Map("1" -> "10", "2" -> "20").transformIntoPartial[Array[(Int, String)]].asOption.get ==> Array(
+          1 -> "10",
+          2 -> "20"
+        )
+
+        Map("1" -> "x", "y" -> "20").transformIntoPartial[Map[Int, Int]].asOption ==> None
+        Map("x" -> "10", "2" -> "20").transformIntoPartial[Map[Int, String]].asOption ==> None
+        Seq("1" -> "10", "2" -> "x").transformIntoPartial[Map[Int, Int]].asOption ==> None
+        ArrayBuffer("1" -> "x", "2" -> "y").transformIntoPartial[Map[String, Int]].asOption ==> None
+        Map("x" -> "10", "y" -> "z").transformIntoPartial[List[(Int, Int)]].asOption ==> None
+        Map("1" -> "10", "x" -> "20").transformIntoPartial[Vector[(Int, String)]].asOption ==> None
+        Array("x" -> "y", "z" -> "v").transformIntoPartial[Map[Int, Int]].asOption ==> None
+        Array("1" -> "x", "2" -> "y").transformIntoPartial[Map[String, Int]].asOption ==> None
+        Map("1" -> "10", "x" -> "20").transformIntoPartial[Array[(Int, Int)]].asOption ==> None
+        Map("x" -> "10", "y" -> "20").transformIntoPartial[Array[(Int, String)]].asOption ==> None
+      }
+
+      // TODO: add map cases with error path support
+    }
+
+    "partial sealed families" - {
+      import numbers._
+
+      "total inner transform" - {
+        implicit val intPrinter: Transformer[Int, String] = _.toString
+        import ScalesPartialTransformer.shortToLongTotalInner
+
+        (short.Zero: short.NumScale[Int, Nothing])
+          .transformIntoPartial[long.NumScale[String]]
+          .asOption ==> Some(long.Zero)
+        (short.Million(4): short.NumScale[Int, Nothing])
+          .transformIntoPartial[long.NumScale[String]]
+          .asOption ==> Some(long.Million("4"))
+        (short.Billion(2): short.NumScale[Int, Nothing])
+          .transformIntoPartial[long.NumScale[String]]
+          .asOption ==> Some(long.Milliard("2"))
+        (short.Trillion(100): short.NumScale[Int, Nothing])
+          .transformIntoPartial[long.NumScale[String]]
+          .asOption ==> Some(long.Billion("100"))
+      }
+
+      "partial inner transform" - {
+        implicit val intParserOpt: PartialTransformer[String, Int] =
+          PartialTransformer(_.parseInt.toPartialTransformerResult)
+        import ScalesPartialTransformer.shortToLongPartialInner
+
+        (short.Zero: short.NumScale[String, Nothing])
+          .transformIntoPartial[long.NumScale[Int]]
+          .asOption ==> Some(long.Zero)
+        (short.Million("4"): short.NumScale[String, Nothing])
+          .transformIntoPartial[long.NumScale[Int]]
+          .asOption ==> Some(long.Million(4))
+        (short.Billion("2"): short.NumScale[String, Nothing])
+          .transformIntoPartial[long.NumScale[Int]]
+          .asOption ==> Some(long.Milliard(2))
+        (short.Trillion("100"): short.NumScale[String, Nothing])
+          .transformIntoPartial[long.NumScale[Int]]
+          .asOption ==> Some(long.Billion(100))
+
+        (short.Million("x"): short.NumScale[String, Nothing])
+          .transformIntoPartial[long.NumScale[Int]]
+          .asOption ==> None
+        (short.Billion("x"): short.NumScale[String, Nothing])
+          .transformIntoPartial[long.NumScale[Int]]
+          .asOption ==> None
+        (short.Trillion("x"): short.NumScale[String, Nothing])
+          .transformIntoPartial[long.NumScale[Int]]
+          .asOption ==> None
+      }
+    }
 //
 //    "support short circuit semantics" - {
 //

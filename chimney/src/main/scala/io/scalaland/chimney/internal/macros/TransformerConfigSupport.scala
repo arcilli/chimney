@@ -60,7 +60,8 @@ trait TransformerConfigSupport extends MacroUtils {
       coproductInstances: Set[(Symbol, Type)] = Set.empty, // pair: inst type, target type
       transformerDefinitionPrefix: Tree = EmptyTree,
       definitionScope: Option[(Type, Type)] = None,
-      coproductInstancesF: Set[(Symbol, Type)] = Set.empty // pair: inst type, target type
+      coproductInstancesF: Set[(Symbol, Type)] = Set.empty, // pair: inst type, target type
+      coproductInstancesPartial: Set[(Symbol, Type)] = Set.empty // pair: inst type, target type
   ) {
 
     def withDerivationTarget(derivationTarget: DerivationTarget): TransformerConfig = {
@@ -81,7 +82,8 @@ trait TransformerConfigSupport extends MacroUtils {
     def valueLevelAccessNeeded: Boolean = {
       fieldOverrides.exists { case (_, fo) => fo.needValueLevelAccess } ||
       coproductInstances.nonEmpty ||
-      coproductInstancesF.nonEmpty
+      coproductInstancesF.nonEmpty ||
+      coproductInstancesPartial.nonEmpty
     }
 
     def fieldOverride(fieldName: String, fieldOverride: FieldOverride): TransformerConfig = {
@@ -94,6 +96,10 @@ trait TransformerConfigSupport extends MacroUtils {
 
     def coproductInstanceF(instanceType: Type, targetType: Type): TransformerConfig = {
       copy(coproductInstancesF = coproductInstancesF + (instanceType.typeSymbol -> targetType))
+    }
+
+    def coproductInstancePartial(instanceType: Type, targetType: Type): TransformerConfig = {
+      copy(coproductInstancesPartial = coproductInstancesPartial + (instanceType.typeSymbol -> targetType))
     }
   }
 
@@ -183,10 +189,9 @@ trait TransformerConfigSupport extends MacroUtils {
       val List(fieldNameT, rest) = cfgTpe.typeArgs
       val fieldName = fieldNameT.singletonString
       captureTransformerConfig(rest).fieldOverride(fieldName, FieldOverride.ComputedPartial)
-    } else if (cfgTpe.typeConstructor =:= fieldComputedPartialT) {
-      val List(fieldNameT, rest) = cfgTpe.typeArgs
-      val fieldName = fieldNameT.singletonString
-      captureTransformerConfig(rest).fieldOverride(fieldName, FieldOverride.ComputedPartial)
+    } else if (cfgTpe.typeConstructor =:= coproductInstancePartialT) {
+      val List(instanceType, targetType, rest) = cfgTpe.typeArgs
+      captureTransformerConfig(rest).coproductInstancePartial(instanceType, targetType)
     } else {
       // $COVERAGE-OFF$
       c.abort(c.enclosingPosition, "Bad internal transformer config type shape!")

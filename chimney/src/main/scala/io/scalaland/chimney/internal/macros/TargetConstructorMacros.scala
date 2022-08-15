@@ -115,6 +115,14 @@ trait TargetConstructorMacros extends Model with AssertUtils {
 
         if (partialArgs.isEmpty) {
           mkTransformerBodyTree0(pt)(mkTargetValueTree(bodyTreeArgs.map(_.tree)))
+        } else if (partialArgs.sizeIs == 1) {
+          val (target, bodyTree) = partialArgs.head
+          val fn = freshTermName(target.name)
+          val totalArgsMap = totalArgs.map { case (target, bt) => target -> bt.tree }.toMap
+          val argsMap = totalArgsMap + (target -> q"$fn")
+          val updatedArgs = targets.map(argsMap)
+
+          q"${bodyTree.tree}.map { ($fn: ${target.tpe}) => ${mkTargetValueTree(updatedArgs)} } "
         } else {
           val (partialTargets, partialBodyTrees) = partialArgs.unzip
           val partialTrees = partialBodyTrees.map(_.tree)
@@ -132,10 +140,10 @@ trait TargetConstructorMacros extends Model with AssertUtils {
           val updatedArgs = targets.map(argsMap)
 
           q"""
-             _root_.io.scalaland.chimney.PartialTransformer.Result.sequence(${partialTreesArray}.iterator, ${pt.failFastTree})
-               .map { ($arrayFn: Array[_]) =>
-                  ${mkTargetValueTree(updatedArgs)}
-               }
+             _root_.io.scalaland.chimney.PartialTransformer.Result.sequence[Array[Any], Any](
+               ${partialTreesArray}.iterator,
+               ${pt.failFastTree}
+             ).map { ($arrayFn: Array[Any]) => ${mkTargetValueTree(updatedArgs)} }
            """
         }
 
