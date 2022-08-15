@@ -683,22 +683,22 @@ object PartialDslSpec extends TestSuite {
 //
 //    // TODO: "support scoped transformer configuration passed implicitly" - {}
 //
-//    "support deriving partial transformer from pure" - {
-//      case class Foo(str: String)
-//
-//      case class Bar(str: String, other: String)
-//
-//      implicit val fooToBar: Transformer[Foo, Bar] =
-//        Transformer
-//          .define[Foo, Bar]
-//          .withFieldConst(_.other, "other")
-//          .buildTransformer
-//
-//      val result = Foo("str").transformIntoPartial[Bar]
-//
-//      result.asOption ==> Some(Bar("str", "other"))
-//      result.asEither ==> Right(Bar("str", "other"))
-//      result.asErrorPathMessagesStrings ==> Seq.empty
-//    }
+    "support deriving partial transformer from pure" - {
+      case class Foo(str: String)
+
+      case class Bar(str: String, other: String)
+
+      implicit val fooToBar: Transformer[Foo, Bar] =
+        Transformer
+          .define[Foo, Bar]
+          .withFieldConst(_.other, "other")
+          .buildTransformer
+
+      val result = Foo("str").transformIntoPartial[Bar]
+
+      result.asOption ==> Some(Bar("str", "other"))
+      result.asEither ==> Right(Bar("str", "other"))
+      result.asErrorPathMessagesStrings ==> Seq.empty
+    }
   }
 }
