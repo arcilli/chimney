@@ -652,32 +652,32 @@ object PartialDslSpec extends TestSuite {
           .asOption ==> None
       }
     }
-//
-//    "support short circuit semantics" - {
-//
-//      val result = Person("John", 10, 140)
-//        .intoPartial[User]
-//        .withFieldConstPartial(
-//          _.height,
-//          PartialTransformer.Result.fromErrors(
-//            Seq(PartialTransformer.Error.ofEmptyValue, PartialTransformer.Error.ofString("Foo"))
-//          )
-//        )
-//        .withFieldConstPartial(_.name, PartialTransformer.Result.fromErrorString("Bad name"))
-//        .transform(failFast = true)
-//
-//      result.asOption ==> None
-//      result.asEither ==> Left(
-//        PartialTransformer.Result
-//          .Errors(
-//            Seq(
-//              PartialTransformer.Error.ofEmptyValue,
-//              PartialTransformer.Error.ofString("Foo")
-//            )
-//          )
-//          .wrapErrorPaths(PartialTransformer.ErrorPath.Accessor("height", _))
-//      )
-//    }
+
+    "support short circuit semantics" - {
+
+      val result = Person("John", 10, 140)
+        .intoPartial[User]
+        .withFieldConstPartial(
+          _.name,
+          PartialTransformer.Result.fromErrors(
+            Seq(PartialTransformer.Error.ofEmptyValue, PartialTransformer.Error.ofString("Bad name"))
+          )
+        )
+        .withFieldConstPartial(_.height, PartialTransformer.Result.fromErrorString("Bad height"))
+        .transform(true) // TODO: support default arguments or another method to call
+
+      result.asOption ==> None
+      result.asEither ==> Left(
+        PartialTransformer.Result
+          .Errors(
+            Vector(
+              PartialTransformer.Error.ofEmptyValue,
+              PartialTransformer.Error.ofString("Bad name")
+            )
+          )
+          .wrapErrorPaths(PartialTransformer.ErrorPath.Accessor("name", _))
+      )
+    }
 //
 //    // TODO: "implicit conflict resolution" - {}
 //
